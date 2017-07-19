@@ -222,6 +222,7 @@ Rework all the databases
 	cross section database generation code released
 	an example database is provided with a handful of molecules to try out
 
+Need to create a README example for the code to let users download/calculate their own inputs
 
 Rework bin file nomenclature
 

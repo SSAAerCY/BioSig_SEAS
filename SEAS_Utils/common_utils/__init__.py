@@ -29,7 +29,7 @@ def to_bool(x):
     try:
         if x.lower() in ['true', 'yes']:
             return True
-        elif x.lower() in ['false', 'no']:
+        elif x.lower() in ['false', 'no', 'none']:
             return False
     except AttributeError:
         pass
@@ -40,12 +40,12 @@ def to_bool(x):
     raise ValueError("Unknown boolean specifier: %s" % x)
 
 def to_float(x):
-    if x is None:
+    if x == None or x == "None":
         return None
     return float(x)
 
 def to_int(x):
-    if x is None:
+    if x == None or x == "None":
         return None
     return int(x)
 
