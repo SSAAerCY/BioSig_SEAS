@@ -20,7 +20,10 @@ This is a logistic module that generates the mixing ratio files
 This module does not handle the physics and chemistry that goes into 
 determining the actual mixing ratio of the atmosphere
 
-how do you handle variable mixing ratios?
+Currently have added constant, increasing and decreasing ratios
+
+but how do you handle some more complex variable mixing ratios?
+How should they be loaded and interpreted?
 
 
 """
@@ -36,7 +39,8 @@ class mixing_ratio_generator():
     
     def __init__(self,
                  ratio_input,
-                 filler = "N2",
+                 filler = True,
+                 filler_molecule = "N2",
                  pressures = [100000,10000,1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001],
                  path = "../../input/atmosphere_data/Mixing_Ratio",
                  name = "Temp.txt"
@@ -45,6 +49,7 @@ class mixing_ratio_generator():
         
         self.ratio_input = ratio_input
         self.filler = filler
+        self.filler_molecule = filler_molecule
         self.pressures = pressures
         self.path = path
         self.name = name
@@ -84,15 +89,22 @@ class mixing_ratio_generator():
                         self.data[j+1].append(str(current))
         
         # assuming single filler for now
-        self.data[0].append(self.filler)
-        for k,ratio in enumerate(self.data[1:]):
-            total_ratio = sum([float(x) for x in ratio[1:]])
-            if total_ratio > 100:
-                print "Total Mixing Ratio exceed maximum, check mixing ratio generation"
-                print self.data[0]
-                print ratio
+        if self.filler:
+            if self.filler_molecule in self.data[0]:
+                print "Simulation Terminated"
+                print "Filler Molecule %s already in simulation molecules"%self.filler_molecule
+                print "Please remove filler from list or select a new filler"
                 sys.exit()
-            self.data[k+1].append(str(100-total_ratio)) 
+                
+            self.data[0].append(self.filler_molecule)
+            for k,ratio in enumerate(self.data[1:]):
+                total_ratio = sum([float(x) for x in ratio[1:]])
+                if total_ratio > 100:
+                    print "Total Mixing Ratio exceed maximum, check mixing ratio generation"
+                    print self.data[0]
+                    print ratio
+                    sys.exit()
+                self.data[k+1].append(str(100-total_ratio)) 
             
         return self.data
     

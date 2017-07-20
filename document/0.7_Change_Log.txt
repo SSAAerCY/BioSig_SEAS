@@ -19,6 +19,7 @@ Here is a list of new features that's planned for 0.7 version of the code
     5. Implemente Kevin Heng's Suggestions
         TP scaling and cross section generated on the grid.
     6. cross section database generation code
+    7. mixing ratio file generator
 
 - Modify
 
@@ -254,5 +255,10 @@ Things reserved for 0.8 to handle
 		also crop the nu and coef 
 
 	9. think about how to handle planets with different surface pressure
+	
+	10. add exceptions to cases that bound to fail the code
+
+Things reserved for 0.9 to handle
+	1. add simple testing cases?
 	
 	
