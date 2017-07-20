@@ -21,26 +21,26 @@ This is an example simulation for beginner users to try out the code
 
 import os
 import sys
+import numpy as np
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-import SEAS_Main.simulation.transmission_spectra_simulator as theory
-import SEAS_Main.simulation.observer as obs
-import SEAS_Utils.common_utils.configurable as config
-import SEAS_Utils.common_utils.data_plotter as plt
+
+from SEAS_Utils.common_utils.data_loader import multi_column_file_loader
+from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data
 
 
 if __name__ == "__main__":
-    
-    user_input = config.Configuration("user_input_example.cfg")
+    filename = os.path.join(Mixing_Ratio_Data,"test_earth.txt")
+    data = multi_column_file_loader(filename,type="mixed"))
+    print 
 
-    simulation = theory.TS_Simulator(user_input)
-    
-    Raw_TS = simulation.simulate()
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+

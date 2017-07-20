@@ -55,10 +55,14 @@ def multi_column_file_loader(path,spliter="",type="float"):
     
     with open(path) as data_file:   
         if spliter == "":
-            data = (np.array([x.split() for x in data_file.read().split("\n")])).T
+            data = np.array([x.split() for x in data_file.read().split("\n")]).T
         else:
-            data = (np.array([x.split(spliter) for x in data_file.read().split("\n")])).T
-            
+            data = np.array([x.split(spliter) for x in data_file.read().split("\n")]).T
+        
+
+        #if data[-1] == []:
+        #    data = data[:-1]
+        
         if type == "float":
             return np.array(data,dtype=np.float)
         elif type == "mixed":

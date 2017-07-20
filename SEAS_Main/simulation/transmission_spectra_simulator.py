@@ -42,7 +42,7 @@ import SEAS_Aux.calculation.astrophysics as calc
 
 from SEAS_Utils.common_utils.constants import *
 from SEAS_Utils.common_utils.timer import simple_timer
-from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, molecule_info, Simulation_DB,Intermediate_DIR
+from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, molecule_info, DB_DIR,Intermediate_DIR
 from SEAS_Utils.common_utils.data_loader import two_column_file_loader,multi_column_file_loader, json_loader,cross_section_loader2
 import SEAS_Utils.common_utils.db_management2 as dbm
 
@@ -64,6 +64,9 @@ class TS_Simulator():
     def __init__(self,user_input):
         
         self.user_input = user_input
+        
+        self.DB_DIR = os.path.join(DB_DIR,self.user_input["Simulation_Control"]["DB_DIR"])
+        
         self.T_grid = [float(x) for x in user_input["Simulation_Control"]["T_Grid"]]
         self.P_grid = [float(x) for x in user_input["Simulation_Control"]["P_Grid"]]
     
@@ -158,12 +161,13 @@ class TS_Simulator():
         if self.user_input["Simulation_Control"]["Mixing_Ratio"] == "File":
             filename = os.path.join(Mixing_Ratio_Data,self.user_input["Simulation_Control"]["Mixing_Ratio_Name"])
             data = multi_column_file_loader(filename,type="mixed")
-            
+
             # mixing ratio are in %, so need to divide by 100
             molecules, molecule_MR = [],[]
             for i in data[1:]:
                 molecules.append(i[0])
                 molecule_MR.append([float(x)/100. for x in i[1:]])
+
             MR_pressure = [float(x) for x in data[0][1:]]
             
             return molecules, MR_pressure, molecule_MR
@@ -228,7 +232,7 @@ class TS_Simulator():
         for now only from simulation db
         """
         
-        kwargs = {"dir"        :Simulation_DB,
+        kwargs = {"dir"        :self.DB_DIR,
                   "db_name"    :self.user_input["Simulation_Control"]["DB_Name"],
                   "user"       :self.user_input["User"]["username"],
                   "DEBUG"      :False,
@@ -240,8 +244,10 @@ class TS_Simulator():
         cross_db.access_db()
 
         for molecule in self.normalized_molecules:
+            print molecule
             if cross_db.check_table_exist(molecule) == False:
-                print "molecule: %s not in database, simulation_terminated"
+                print "molecule: %s not in database, simulation_terminated"%molecule
+                print "also need to check if database exists"
                 sys.exit()
         
         return cross_db
@@ -270,7 +276,7 @@ class TS_Simulator():
         for molecule in self.normalized_molecules:
             print molecule,
             
-            nu, raw_cross_section_grid = cross_section_loader2(self.user_input, Simulation_DB, molecule)
+            nu, raw_cross_section_grid = cross_section_loader2(self.user_input, self.DB_DIR, molecule)
             print "load:%s"%self.Timer.elapse(),
             processed_cross_section = []
             for layer_cross_section in raw_cross_section_grid:

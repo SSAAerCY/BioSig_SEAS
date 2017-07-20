@@ -31,7 +31,16 @@ Here is a list of new features that's planned for 0.7 version of the code
     6. Fixed errors in the code:
     	i.interpolation pressure gone backwards
 
+
+	need to add a dir checker for file saving
+	remove N2 cross section? or simple replacement with empty cross section to save time....
+	need to check if database exists
+	need to check cross section save to see if match with 
+		naming for generated cross section save?	
+
 - Remove
+
+
 
 
 

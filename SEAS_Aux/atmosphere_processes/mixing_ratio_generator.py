@@ -114,12 +114,13 @@ class mixing_ratio_generator():
         # need a file/path checker
         
         with open(save_path,"w") as file:
-            for i in self.data:
-                print i
-                file.write(" ".join(i))
+            for i,info in enumerate(self.data):
+                file.write(" ".join(info))
+                if i == len(self.data)-1:
+                    break
+                
                 file.write("\n")
             
-            file.save()
     
     
     

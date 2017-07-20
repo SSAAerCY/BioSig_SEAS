@@ -30,10 +30,12 @@ import SEAS_Utils.common_utils.configurable as config
 
 if __name__ == "__main__":
     
-    ratio_input = config.Configuration("mixing_ratio_selection.cfg")
+    ratio_input = config.Configuration("water_only_selection.cfg")
 
 
-    simulator = mix.mixing_ratio_generator(ratio_input)
+    simulator = mix.mixing_ratio_generator(ratio_input,
+                                           filler=False,
+                                           name="water_only2.txt")
     simulator.generate()
     simulator.save()
     
