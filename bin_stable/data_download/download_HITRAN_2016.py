@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Download the 2016 HITRAN Database
+Download the 2016 HITRAN Line List Database
 
 """
 

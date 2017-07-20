@@ -30,6 +30,12 @@ simulation.db You will need to generate your own in order to run the full capabi
 For developers:
     Please DO NOT git add the input folder or any generated data
 
+
+1. download hitran 2016 line list database
+2. create cross section database
+3. download NIST Spectra
+4. create NIST Spectra database
+
 """
 
 
