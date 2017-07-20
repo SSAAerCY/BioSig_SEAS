@@ -36,7 +36,8 @@ Here is a list of new features that's planned for 0.7 version of the code
 	remove N2 cross section? or simple replacement with empty cross section to save time....
 	need to check if database exists
 	need to check cross section save to see if match with 
-		naming for generated cross section save?	
+		naming for generated cross section save?
+	need to rework the generation of example_Db... and associated data intakes	
 
 - Remove
 

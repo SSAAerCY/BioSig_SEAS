@@ -244,7 +244,6 @@ class TS_Simulator():
         cross_db.access_db()
 
         for molecule in self.normalized_molecules:
-            print molecule
             if cross_db.check_table_exist(molecule) == False:
                 print "molecule: %s not in database, simulation_terminated"%molecule
                 print "also need to check if database exists"
