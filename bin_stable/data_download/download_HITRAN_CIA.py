@@ -16,10 +16,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Download the 2016 HITRAN Line List Database
+Download the HITRAN Collision Induced Absorption Database
+
+The HITRAN CIA exist as txt files.
+use web scrapper to download the data
+
+As of July 2017, the X-X_2016.cia files are not found on the website and can't be scraped. 
+Consequently we will download the X-X_2011.cia datafiles for now.
+
+
 
 """
-
 
 import os
 import sys
@@ -27,24 +34,14 @@ import sys
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-import SEAS_Aux.data_downloader.web_downloader as wd
-from SEAS_Utils.common_utils.DIRs import HITRAN_Lines
+import SEAS_Aux.data_downloader.web_scraper as ws
+from SEAS_Utils.common_utils.DIRs import HITRAN_CIA
 
 
 if __name__ == "__main__":
     
-
-    ID = wd.get_HITRAN_ID()
-    numin = 0
-    numax = 50000
-    
-    for i in ID:
-        # need to check if file already exist and whether or not to overwrite.
-        # not urgent not important though
-        wd.HITRAN_Line_List_downloader(HITRAN_Lines,i,numin,numax,True,False)
+    scraper = ws.HITRAN_CIA_crawler("http://hitran.org/cia/",HITRAN_CIA)
+    scraper.download()
 
 
-    
-    
-    
-    
+
