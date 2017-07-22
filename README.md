@@ -16,10 +16,12 @@ All code and modules should follow be two directory deep by default.
 
 Recent Work adding CIA. To Run, 
 
-# Data download, you only need to do this once
+
+# Calculate the CIA Spectra for H2-H2
+Data download, you only need to do this once
+
 cd BioSig_SEAS/bin_stable/data_download
 python download_HITRAN_CIA.py
 
-# Calculate the CIA Spectra for H2-H2
 cd BioSig_SEAS/bin_stable/spectra
 python display_CIA_spectra.py
