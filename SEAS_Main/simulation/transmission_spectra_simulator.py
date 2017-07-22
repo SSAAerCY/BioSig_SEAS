@@ -42,7 +42,8 @@ import SEAS_Aux.calculation.astrophysics as calc
 from SEAS_Utils.common_utils.constants import *
 from SEAS_Utils.common_utils.timer import simple_timer
 from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, molecule_info, DB_DIR,Intermediate_DIR
-from SEAS_Utils.common_utils.data_loader import two_column_file_loader,multi_column_file_loader, json_loader,cross_section_loader2
+from SEAS_Utils.common_utils.data_loader import two_column_file_loader,multi_column_file_loader, json_loader, molecule_cross_section_loader2
+from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 import SEAS_Utils.common_utils.db_management2 as dbm
 
 class TS_Simulator():
@@ -264,9 +265,9 @@ class TS_Simulator():
 
 
         if self.user_input["Save"]["Intermediate_Data"]["cross_section_saved"] == "true":
-            savename = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["cross_section_filename"])
-            existed = os.path.isfile(savename)
-            if existed:
+            savepath = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["cross_section_savepath"])
+            savename = os.path.join(savepath,self.user_input["Save"]["Intermediate_Data"]["cross_section_savename"])
+            if check_file_exist(savename):
                 print "Cross Section Loaded from Save"
                 return np.load(savename)      
 
@@ -274,7 +275,7 @@ class TS_Simulator():
         for molecule in self.normalized_molecules:
             print molecule,
             
-            nu, raw_cross_section_grid = cross_section_loader2(self.user_input, self.DB_DIR, molecule)
+            nu, raw_cross_section_grid = molecule_cross_section_loader2(self.user_input, self.DB_DIR, molecule)
             print "load:%s"%self.Timer.elapse(),
             processed_cross_section = []
             for layer_cross_section in raw_cross_section_grid:
@@ -293,7 +294,11 @@ class TS_Simulator():
             print "inte:%s"%self.Timer.elapse()
 
         if self.user_input["Save"]["Intermediate_Data"]["cross_section_saved"] == "true":
-            savename = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["cross_section_filename"])
+            
+            savepath = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["cross_section_savepath"])
+            check_path_exist(savepath)
+            savename = os.path.join(savepath,self.user_input["Save"]["Intermediate_Data"]["cross_section_savename"])           
+            
             np.save(savename, [nu,normalized_cross_section])
             print "\nInterpolated Cross Section Saved!"
         

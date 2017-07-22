@@ -18,7 +18,7 @@
 
 """
 
-This is an demonstration code for calculating cross sections
+This is an demonstration code for calculating cross sections from line lists
 
 
 """
@@ -31,14 +31,14 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import SEAS_Aux.cross_section.cross_section_calculator as csc
 import SEAS_Utils.common_utils.data_plotter as plt
-from SEAS_Utils.common_utils.DIRs import Temp_DIR,HITRAN_Water_lines
+from SEAS_Utils.common_utils.DIRs import Temp_DIR, HITRAN_Water_Lines
 from SEAS_Utils.common_utils.timer import simple_timer
 
 
 
 def simple_test_inputs():
 
-    d_path      = HITRAN_Water_lines
+    d_path      = HITRAN_Water_Lines
     r_path      = Temp_DIR
     molecule    = "H2O"
     component   = [1,1,1]
@@ -52,7 +52,7 @@ def simple_test_inputs():
 
 def simplist_test():
 
-    d_path      = HITRAN_Water_lines
+    d_path      = HITRAN_Water_Lines
     r_path      = Temp_DIR
     molecule    = "H2O"
     component   = [1,1,1]
@@ -76,7 +76,7 @@ def simplist_test():
 
 def simple_time_test():
     
-    d_path      = HITRAN_Water_lines
+    d_path      = HITRAN_Water_Lines
     r_path      = Temp_DIR
     molecule    = "H2O"
     component   = [1,1,1]
@@ -122,7 +122,7 @@ def test_hapi_calc():
 
 if __name__ == "__main__":
 
-    d_path      = HITRAN_Water_lines
+    d_path      = HITRAN_Water_Lines
     r_path      = Temp_DIR
     molecule    = "H2O"
     component   = [1,1,1]

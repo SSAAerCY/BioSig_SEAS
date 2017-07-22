@@ -53,13 +53,7 @@ def two_column_file_loader(path,spliter=None,type="float",skip=0):
 
 def two_column_chunk_file_loader(path,spliter=None,chunk_splitter="\n",type="float",skip=0):
     pass
-    
-
-
-def HITRAN_CIA_loader():
-    pass
-    
-
+      
 def multi_column_file_loader(path,spliter=None,type="float",skip=0):
     """
     load data from files that contains multiple columns
@@ -79,7 +73,6 @@ def multi_column_file_loader(path,spliter=None,type="float",skip=0):
         elif type == "mixed":
             return data
     
-
 def json_loader(path):
     
     with open(path) as data_file:
@@ -87,14 +80,11 @@ def json_loader(path):
 
     return data
 
-
-
 def database_loader(input):
     "TBD,"
     pass
 
-
-def cross_section_loader(inputs, cross_db, molecule):
+def molecule_cross_section_loader(inputs, cross_db, molecule):
 
     Pgrid = inputs["Simulation_Control"]["P_Grid"]
     Tgrid = inputs["Simulation_Control"]["T_Grid"]
@@ -116,7 +106,7 @@ def cross_section_loader(inputs, cross_db, molecule):
     
     return nu, data
 
-def cross_section_loader2(inputs, outpath, molecule):
+def molecule_cross_section_loader2(inputs, outpath, molecule):
 
     T_grid = inputs["Simulation_Control"]["T_Grid"]
     P_grid = inputs["Simulation_Control"]["P_Grid"]
@@ -147,8 +137,8 @@ def cross_section_loader2(inputs, outpath, molecule):
     
     return nu, data
 
-
-
+def HITRAN_CIA_cross_section_loader():
+    pass
 
 def HITRAN_Line_List_reference():
     
