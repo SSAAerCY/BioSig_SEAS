@@ -5,7 +5,7 @@ This is the Simulator for Exoplanet Atmosphere Spectra for biosignature studies
 
 Code Download:
 
-git clone https://github.com/azariven/BioSig_SEAS.githttps://github.com/azariven/BioSig_SEAS.git
+git clone https://github.com/azariven/BioSig_SEAS.git
 
 
 All tested exectution files are under /bin_stable
