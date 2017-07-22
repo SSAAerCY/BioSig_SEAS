@@ -30,6 +30,7 @@ import sys
 import numpy as np
 
 from SEAS_Utils import to_float
+from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 
 class temperature_pressure_profile_generator():
     
@@ -38,15 +39,16 @@ class temperature_pressure_profile_generator():
                  data,
                  pressures = [100000,10000,1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001],
                  path = "../../input/atmosphere_data/TP_Profile",
-                 name = "Temp.txt"
+                 name = "Temp.txt",
+                 overwrite = False
                  ):
         
         
-        self.data = data
+        self.data      = data
         self.pressures = pressures
-        self.path = path
-        self.name = name
-        
+        self.path      = path
+        self.name      = name
+        self.overwrite = overwrite
     
     def load(self):
         """
@@ -86,6 +88,8 @@ class temperature_pressure_profile_generator():
                     
         self.T = T
         
+        
+        print "TP_Profile generated!"
         return T
         
 
@@ -93,8 +97,10 @@ class temperature_pressure_profile_generator():
 
     def save(self):
         
+        check_path_exist(self.path)
         save_path = os.path.join(self.path,self.name)
-        # need a file/path checker
+        check_file_exist(save_path)
+        
         
         with open(save_path,"w") as file:
             for i,t in enumerate(self.T):
@@ -103,5 +109,6 @@ class temperature_pressure_profile_generator():
                     break
                 file.write("\n")
 
+        print "TP_Profile saved to %s"%save_path
 
 

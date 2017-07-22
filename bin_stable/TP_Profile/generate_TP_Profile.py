@@ -33,7 +33,8 @@ if __name__ == "__main__":
     TP_input = config.Configuration("TP_selection.cfg")
 
 
-    simulator = TPgen.temperature_pressure_profile_generator(TP_input["Test Varying Atmosphere 1"])
+    simulator = TPgen.temperature_pressure_profile_generator(TP_input["Test Isothermal Atmosphere"],
+                                                             name = "isothermal_300K.txt")
     simulator.generate()
     simulator.save()
     

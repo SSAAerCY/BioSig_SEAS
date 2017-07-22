@@ -33,6 +33,7 @@ import sys
 import numpy as np
 
 from SEAS_Utils import to_float
+from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 
 class mixing_ratio_generator():
     
@@ -43,7 +44,8 @@ class mixing_ratio_generator():
                  filler_molecule = "N2",
                  pressures = [100000,10000,1000,100,10,1,0.1,0.01,0.001,0.0001,0.00001],
                  path = "../../input/atmosphere_data/Mixing_Ratio",
-                 name = "Temp.txt"
+                 name = "Temp.txt",
+                 overwrite = False
                  ):
         
         
@@ -53,6 +55,7 @@ class mixing_ratio_generator():
         self.pressures = pressures
         self.path = path
         self.name = name
+        self.overwrite = overwrite
         
     
     def generate(self):
@@ -105,13 +108,16 @@ class mixing_ratio_generator():
                     print ratio
                     sys.exit()
                 self.data[k+1].append(str(100-total_ratio)) 
-            
+        
+        
+        print "Mixing Ratio File Generated!"
         return self.data
     
     def save(self):
-        
+
+        check_path_exist(self.path)
         save_path = os.path.join(self.path,self.name)
-        # need a file/path checker
+        check_file_exist(save_path)
         
         with open(save_path,"w") as file:
             for i,info in enumerate(self.data):
@@ -121,7 +127,7 @@ class mixing_ratio_generator():
                 
                 file.write("\n")
             
-    
+        print "Mixing Ratio file saved to %s"%save_path
     
     
     

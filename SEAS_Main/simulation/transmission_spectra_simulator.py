@@ -123,6 +123,10 @@ class TS_Simulator():
         
         plt.show()
         return self.Final_TS
+
+    def CIA_simulate(self):
+        
+
         
 
     def load_astrophysical_properties(self):
@@ -205,6 +209,21 @@ class TS_Simulator():
         
         normalized_temperature = interpolate1d(x,y,X)
         return normalized_temperature    
+
+    def load_rayleigh_scattering(self):
+        pass
+    
+    def interpolate_rayleigh_scattering(self):
+        pass
+    
+    def load_CIA(self):
+        pass
+    
+    def interpolate_CIA(self):
+        pass
+
+
+
 
     def calculate_scale_height(self):
         
