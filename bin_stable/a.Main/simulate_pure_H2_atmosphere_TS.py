@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This code test the generation of TP Profiles
+This is an example simulation for beginner users to try out the code
 """
 
 import os
@@ -25,24 +25,19 @@ import sys
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-import SEAS_Aux.atmosphere_processes.TP_profile_generator as TPgen
+import SEAS_Main.simulation.transmission_spectra_simulator as theory
+import SEAS_Main.simulation.observer as obs
 import SEAS_Utils.common_utils.configurable as config
+import SEAS_Utils.common_utils.data_plotter as plt
+
 
 if __name__ == "__main__":
     
-    TP_input = config.Configuration("TP_selection.cfg")
+    user_input = config.Configuration("user_input_dev.cfg")
 
-
-    simulator = TPgen.temperature_pressure_profile_generator(TP_input["Test Isothermal Atmosphere"],
-                                                             name = "isothermal_300K.txt")
-    simulator.generate()
-    simulator.save()
+    simulation = theory.TS_Simulator(user_input)
     
-    
-    
-    
-    
-    
+    Raw_TS = simulation.example_simulate()
     
     
     
