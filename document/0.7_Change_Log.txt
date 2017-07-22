@@ -38,6 +38,10 @@ Here is a list of new features that's planned for 0.7 version of the code
 	need to check cross section save to see if match with 
 		naming for generated cross section save?
 	need to rework the generation of example_Db... and associated data intakes	
+		perhaps a db checker to make sure each databse is smaller than 100mb?
+	
+	need a db_log output directory parameter for dbm
+	need a "clean" option to remove already downloaded files
 
 - Remove
 

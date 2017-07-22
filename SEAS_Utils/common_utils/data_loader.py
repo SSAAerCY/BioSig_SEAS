@@ -32,39 +32,50 @@ import numpy as np
 import SEAS_Utils.common_utils.db_management2 as dbm
 
 
-def two_column_file_loader(path,spliter="",type="float"):
+def two_column_file_loader(path,spliter=None,type="float",skip=0):
     """
     load data from files that contains only two column
     """
     
     with open(path) as data_file:   
-        if spliter == "":
-            xdata,ydata = (np.array([x.split() for x in data_file.read().split("\n")])).T
-        else:
-            xdata,ydata = (np.array([x.split(spliter) for x in data_file.read().split("\n")])).T
-            
+        data = [x.split(spliter) for x in data_file.read().split("\n")[skip:]]
+        if data[-1] == []:
+            data = data[:-1]        
+        xdata,ydata = [list(x) for x  in zip(*data)]     
         if type == "float":
             return np.array(xdata,dtype=np.float),np.array(ydata,dtype=np.float)
+        elif type == "int":
+            return np.array(xdata,dtype=np.int),np.array(ydata,dtype=np.int)
+        elif type == "mixed":
+            return xdata,ydata
+        else:
+            return xdata,ydata
+
+def two_column_chunk_file_loader(path,spliter=None,chunk_splitter="\n",type="float",skip=0):
+    pass
+    
 
 
+def HITRAN_CIA_loader():
+    pass
+    
 
-def multi_column_file_loader(path,spliter="",type="float"):
+def multi_column_file_loader(path,spliter=None,type="float",skip=0):
     """
     load data from files that contains multiple columns
     """
     
     with open(path) as data_file:   
-        if spliter == "":
-            data = np.array([x.split() for x in data_file.read().split("\n")]).T
-        else:
-            data = np.array([x.split(spliter) for x in data_file.read().split("\n")]).T
+        data = [x.split(spliter) for x in data_file.read().split("\n")[skip:]]
+        if data[-1] == []:
+            data = data[:-1]
         
-
-        #if data[-1] == []:
-        #    data = data[:-1]
+        data = [list(x) for x  in zip(*data)]    
         
         if type == "float":
             return np.array(data,dtype=np.float)
+        elif type == "int":
+            return np.array(data,dtype=np.int)
         elif type == "mixed":
             return data
     

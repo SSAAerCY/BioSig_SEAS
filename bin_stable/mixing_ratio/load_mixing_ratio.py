@@ -34,7 +34,7 @@ from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data
 if __name__ == "__main__":
     filename = os.path.join(Mixing_Ratio_Data,"test_earth.txt")
     data = multi_column_file_loader(filename,type="mixed"))
-    print 
+    print data
 
 
 

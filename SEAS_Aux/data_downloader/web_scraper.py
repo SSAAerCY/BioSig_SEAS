@@ -21,11 +21,15 @@ Web Crawler to download data from websites
 
 """
 
+import os
+import urllib2
+import httplib
+from bs4 import BeautifulSoup
 
 
 from SEAS_Utils import to_float
-from SEAS_Utils.configurable import ConfigurableObject
-
+from SEAS_Utils.common_utils.configurable import ConfigurableObject
+import web_downloader as wd
 
 
 # example crawler class
@@ -46,11 +50,40 @@ class web_crawler(ConfigurableObject):
 
 class nist_crawler(web_crawler):
     
-    def __init(self):
+    def __init__(self):
         pass
     
+
+
+class HITRAN_CIA_crawler():
+    
+    def __init__(self,url,path):
+        
+        self.url = url
+        self.path = path
     
     
+    def download(self):
+
+        page = urllib2.urlopen(self.url).read()
+        soup = BeautifulSoup(page,"lxml")
+        data = soup.findAll("li")
+        
+        for i in data:
+            
+            if "CIA" in i.a["href"]:
+                link = "".join(["http://hitran.org",i.a["href"]])
+                if "2016" in link:
+                    link = link.replace("2016","2011")
+                
+                print "downloading %s"%link
+                wd.downloader(link,self.path)
+        
+        print "All data downloaded to %s"%self.path
+                
+                
+                
+                
     
     
     

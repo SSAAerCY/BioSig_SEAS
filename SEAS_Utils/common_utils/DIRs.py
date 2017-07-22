@@ -36,11 +36,9 @@ ROOT = sys.path[0]
 
 Temp_DIR = os.path.join(ROOT,"output/Temp_Result")
 
-
-
 Data_DIR = os.path.join(ROOT,"input")
-
 Molecule_Absorption = os.path.join(Data_DIR,"absorption_data")
+HITRAN_CIA   = os.path.join(Molecule_Absorption,"HITRAN_CIA")
 HITRAN_Lines = os.path.join(Molecule_Absorption,"HITRAN_Line_List")
 HITRAN_Water_Lines = os.path.join(HITRAN_Lines, "H2O")
 HITRAN_Molecule_List = os.path.join(HITRAN_Lines, "HITRAN_Molecule_List.txt")

@@ -22,7 +22,7 @@ Web downloader
 
 """
 import os
-import SEAS_Aux.cross_section.hapi as hp
+import urllib
 from SEAS_Utils import isfile
 
 def get_HITRAN_ID():
@@ -32,7 +32,20 @@ def get_HITRAN_ID():
     for i,molecule in enumerate(file):
         ID.append([molecule,i+1,1])
     return ID
+
+
+
+class downloader():
     
+    def __init__(self,url,path):
+        self.url = url
+        self.path = path
+        self.download()
+    
+    def download(self):
+        urllib.urlretrieve(self.url,os.path.join(self.path,self.url.split("/")[-1]))
+        
+
 
 class HITRAN_Line_List_downloader():
     """
@@ -46,6 +59,7 @@ class HITRAN_Line_List_downloader():
     35 ClONO2 Chlorine Nitrate
     42 CF4 Carbon Tetrafluoride
     """
+    
     def __init__(self,
                  outpath = "../../input/database/absorption_data/User_Defined",
                  molecule = ["H2O",1,1],
@@ -75,6 +89,8 @@ class HITRAN_Line_List_downloader():
     
     def download(self):
         
+        import SEAS_Aux.cross_section.hapi as hp
+        
         hp.db_begin(self.path)
         try:
             hp.fetch(self.n,self.m,self.i,self.min,self.max)
@@ -82,6 +98,12 @@ class HITRAN_Line_List_downloader():
             print self.n, " load error, data not downloaded"
         except:
             print self.n, " load error, data not downloaded"
+    
+
+class HITRAN_CIA_downloader():
+    
+    def __init__(self):
+        pass
     
     
     
