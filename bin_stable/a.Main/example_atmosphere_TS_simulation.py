@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     simulation = theory.TS_Simulator(user_input)
     
-    Raw_TS = simulation.simulate()
+    Raw_TS = simulation.example_simulate()
     
     
     

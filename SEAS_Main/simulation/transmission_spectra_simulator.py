@@ -39,7 +39,6 @@ import SEAS_Main.effects
 from SEAS_Aux.calculation.interpolation import interpolate1d
 import SEAS_Aux.calculation.astrophysics as calc 
 
-
 from SEAS_Utils.common_utils.constants import *
 from SEAS_Utils.common_utils.timer import simple_timer
 from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, molecule_info, DB_DIR,Intermediate_DIR
@@ -71,7 +70,7 @@ class TS_Simulator():
         self.P_grid = [float(x) for x in user_input["Simulation_Control"]["P_Grid"]]
     
     
-    def simulate(self):
+    def example_simulate(self):
         
         
         self.Timer = simple_timer(4)
