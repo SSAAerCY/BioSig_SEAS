@@ -21,7 +21,9 @@ Recent Work adding CIA. To Run,
 Data download, you only need to do this once
 
 cd BioSig_SEAS/bin_stable/data_download
+
 python download_HITRAN_CIA.py
 
 cd BioSig_SEAS/bin_stable/spectra
+
 python display_CIA_spectra.py
