@@ -30,53 +30,27 @@ DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
 from SEAS_Utils.common_utils.DIRs import HITRAN_CIA
-from SEAS_Aux.atmosphere_processes.CIA_selector import cia_selector
-from SEAS_Utils.common_utils.data_loader import two_column_file_loader,HITRAN_CIA_loader
+from SEAS_Main.atmosphere_effects.collision_induced_absorption import HITRAN_CIA_data_processor, select_molecule_cia
 #import matplotlib.pyplot as plt
-
-class HITRAN_CIA_data():
-    
-    
-    def __init__(self,filename):
-        
-        self.filename = filename
-    
-    def load(self):
-        
-        pass
-
-
 
 
 if __name__ == "__main__":
     
-    with open(os.path.join(HITRAN_CIA,"H2-H2_2011.cia")) as f:
 
-        data = f.read().split("\n")
-        header = data[0]
-        print header
+    molecule_list = ["H2"]
+    data_file = select_molecule_cia(molecule_list)
+    
+    data = {}
+    for filename in data_file:
+        processor = HITRAN_CIA_data_processor(HITRAN_CIA, filename)
+        temp,nu,xsec = processor.load()
+        data[filename] = {}
         
-        formula      = header[:20].strip()
-        numin        = float(header[20:30].strip())
-        numax        = float(header[30:40].strip())
-        data_point   = int(header[40:47].strip())
-        temperature  = float(header[47:54].strip())
-        maximum_xsec = float(header[54:64].strip())
-        resolution   = float(header[64:70].strip())
-        comments     = header[76:97].strip()
-        reference    = header[97:].strip()
-
-        
-        if data[-1] == "":
-            data = data[:-1]
-        
-        
-        data_grid = np.reshape(np.array(data),(-1,data_point+1))
-        
-        for i in data_grid:
-            print i[0]
-
-
-
+        data[filename]["Temperature"] = temp
+        data[filename]["nu"] = nu
+        data[filename]["xsec"] = xsec
+            
+    print filename
+    print data[filename]["Temperature"]
 
 

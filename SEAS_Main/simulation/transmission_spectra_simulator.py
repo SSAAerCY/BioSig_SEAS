@@ -34,14 +34,14 @@ ml = MultipleLocator(10)
 
 import SEAS_Main.atmosphere_geometry
 import SEAS_Main.atmosphere_property
-import SEAS_Main.effects
+
 
 from SEAS_Aux.calculation.interpolation import interpolate1d
 import SEAS_Aux.calculation.astrophysics as calc 
 
 from SEAS_Utils.common_utils.constants import *
 from SEAS_Utils.common_utils.timer import simple_timer
-from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, molecule_info, DB_DIR,Intermediate_DIR
+from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, molecule_info, DB_DIR,Intermediate_DIR, HITRAN_CIA
 from SEAS_Utils.common_utils.data_loader import two_column_file_loader,multi_column_file_loader, json_loader, molecule_cross_section_loader2
 from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 import SEAS_Utils.common_utils.db_management2 as dbm
@@ -71,7 +71,7 @@ class TS_Simulator():
         self.P_grid = [float(x) for x in user_input["Simulation_Control"]["P_Grid"]]
     
     
-    def example_simulate(self):
+    def simulate_example(self):
         
         
         self.Timer = simple_timer(4)
@@ -102,18 +102,13 @@ class TS_Simulator():
 
         self.effects = self.load_effects()
 
-
         # determine atmosphereic effects to add in
         self.Final_TS = self.load_atmosphere_geometry_model()
         print "calc time", self.Timer.elapse()
         
-        
-        
         plt.title("Transit Signal for Simulated Atmosphere")
         plt.xlabel(r'Wavelength ($\mu m$)')
         plt.ylabel("Transit Signal (ppm)")    
-        
-        
         plt.plot(10000./self.nu, self.Final_TS)
         
         ax = plt.gca()
@@ -124,10 +119,47 @@ class TS_Simulator():
         plt.show()
         return self.Final_TS
 
-    def CIA_simulate(self):
-        pass
-
+    def simulate_CIA(self):
         
+        self.Timer = simple_timer(4)
+        
+        #create a base flat spectra based on planetary parameters
+        self.Surface_g, self.Base_TS_Value = self.load_astrophysical_properties()
+        
+        # normalized pressure directly correspond to atmosphere layers.
+        self.normalized_pressure = self.load_atmosphere_pressure_layers()
+        
+        # load mixing ration files and determine what molecules are added to the simulation
+        # acquire the mixing ratio at each pressure (need to be interpolated to normalized pressure)
+        self.normalized_molecules, self.MR_Pressure, self.molecule_MR = self.load_mixing_ratio()
+        self.normalized_abundance = self.interpolate_mixing_ratio()
+        
+        # load temperature pressure profile
+        self.TP_Pressure, self.TP_Temperature = self.load_TP_profile()        
+        self.normalized_temperature = self.interpolate_TP_profile()
+
+        # calculate the scale height for each layer of the atmosphere
+        self.normalized_scale_height = self.calculate_scale_height()
+
+        self.normalized_molecules, self.MR_Pressure, self.molecule_MR = self.load_mixing_ratio()
+        self.normalized_abundance = self.interpolate_mixing_ratio()
+        
+        # load temperature pressure profile
+        self.TP_Pressure, self.TP_Temperature = self.load_TP_profile()        
+        self.normalized_temperature = self.interpolate_TP_profile()
+
+        # calculate the scale height for each layer of the atmosphere
+        self.normalized_scale_height = self.calculate_scale_height()        
+
+        self.CIA_File, self.CIA_data = self.load_CIA(["H2"])
+        self.normalized_CIA = self.interpolate_CIA()
+        
+
+
+
+
+
+
 
     def load_astrophysical_properties(self):
         """
@@ -146,6 +178,17 @@ class TS_Simulator():
         Base_TS_Value   = (self.R_planet/self.R_Star)**2
         
         return Surface_g, Base_TS_Value
+
+    def load_spectral_properties(self):
+        """
+        cross section query should take this in as input
+        interpolations also need to consider this
+        """
+        
+        self.numin = float(self.user_input["Spectra"]["Numin"])
+        self.numax = float(self.user_input["Spectra"]["Numax"])
+
+
         
     def load_atmosphere_pressure_layers(self):
         
@@ -216,10 +259,45 @@ class TS_Simulator():
     def interpolate_rayleigh_scattering(self):
         pass
     
-    def load_CIA(self):
-        pass
+    def load_CIA(self,molecules=None):
+        
+        if molecules == None:
+            molecules = self.normalized_molecules
+        
+        data = []
+        if self.user_input["Atmosphere_Effects"]["CIA"] == "true":
+            
+            import SEAS_Main.atmosphere_effects.collision_induced_absorption as cia 
+            
+            data_file = cia.select_molecule_cia(molecules)
+            data = {}
+            for filename in data_file:
+                processor = cia.HITRAN_CIA_data_processor(HITRAN_CIA, filename)
+                temp,nu,xsec = processor.load()
+                data[filename] = {}
+                
+                data[filename]["Temperature"] = temp
+                data[filename]["nu"] = nu
+                data[filename]["xsec"] = xsec
+            return data_file,data
+        else:
+            return [],data
+
+
     
     def interpolate_CIA(self):
+        
+        
+        for 
+        
+        # the temperature need to be interpolated first
+        
+        
+        # then the nu need to be interpolated and augmented
+        # need db information on how to slice
+        
+        
+        
         pass
 
 
@@ -422,7 +500,7 @@ if __name__ == "__main__":
     import SEAS_Utils.common_utils.configurable as config
     user_input = config.Configuration("../../bin/dev/user_input_dev.cfg")
     simulation = TS_Simulator(user_input)
-    Raw_TS = simulation.simulate()
+    Raw_TS = simulation.simulate_example()
 
 
 

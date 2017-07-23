@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This is an example simulation for beginner users to try out the code
+This simulation aimed towards testing H2 atmospheres with CIA added
 """
 
 import os
@@ -34,10 +34,20 @@ import SEAS_Utils.common_utils.data_plotter as plt
 if __name__ == "__main__":
     
     user_input = config.Configuration("user_input_dev.cfg")
+    
+    user_input["Simulation_Control"]["DB_DIR"]              = "Simulation"
+    user_input["Simulation_Control"]["DB_Name"]             = "cross_sec_simulation.db"
+    user_input["Simulation_Control"]["TP_Profile_Name"]     = "isothermal_300K.txt"
+    user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "H2&He.txt"
+
+
+    user_input["Atmosphere_Effects"]["CIA"] = "true"
+
+    user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "Temp_H2&He_Cross_Section.npy"
 
     simulation = theory.TS_Simulator(user_input)
     
-    Raw_TS = simulation.example_simulate()
+    Raw_TS = simulation.simulate_CIA()
     
     
     

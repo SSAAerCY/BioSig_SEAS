@@ -81,11 +81,14 @@ def json_loader(path):
     return data
 
 def database_loader(input):
-    "TBD,"
+    "TBD, keep this here."
     pass
 
 def molecule_cross_section_loader(inputs, cross_db, molecule):
-
+    """
+    Need to move this to the SEAS_Main
+    """
+    
     Pgrid = inputs["Simulation_Control"]["P_Grid"]
     Tgrid = inputs["Simulation_Control"]["T_Grid"]
     numin = inputs["Spectra"]["Numin"]
@@ -107,6 +110,9 @@ def molecule_cross_section_loader(inputs, cross_db, molecule):
     return nu, data
 
 def molecule_cross_section_loader2(inputs, outpath, molecule):
+    """
+    Need to move this to the SEAS_Main
+    """
 
     T_grid = inputs["Simulation_Control"]["T_Grid"]
     P_grid = inputs["Simulation_Control"]["P_Grid"]
@@ -137,8 +143,6 @@ def molecule_cross_section_loader2(inputs, outpath, molecule):
     
     return nu, data
 
-def HITRAN_CIA_cross_section_loader():
-    pass
 
 def HITRAN_Line_List_reference():
     
