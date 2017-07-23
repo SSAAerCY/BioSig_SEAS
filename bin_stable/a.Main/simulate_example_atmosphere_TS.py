@@ -33,7 +33,17 @@ import SEAS_Utils.common_utils.data_plotter as plt
 
 if __name__ == "__main__":
     
-    user_input = config.Configuration("user_input_example.cfg")
+    user_input = config.Configuration("user_input_dev.cfg")
+    
+    user_input["Simulation_Control"]["DB_DIR"]              = "Example"
+    user_input["Simulation_Control"]["DB_Name"]             = "cross_sec_Example.db"
+    user_input["Simulation_Control"]["TP_Profile_Name"]     = "isothermal_300K.txt"
+    user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "H2O_only.txt"
+
+
+    user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "Temp_H2O_Cross_Section.npy"
+
+
 
     simulation = theory.TS_Simulator(user_input)
     

@@ -30,12 +30,12 @@ import SEAS_Utils.common_utils.configurable as config
 
 if __name__ == "__main__":
     
-    TP_input = config.Configuration("TP_selection.cfg")
+    TP_input = config.Configuration("TP_selection.cfg")["Test Isothermal Atmosphere"]
 
 
-    simulator = TPgen.temperature_pressure_profile_generator(TP_input["Test Isothermal Atmosphere"],
-                                                             name = "isothermal_300K.txt")
+    simulator = TPgen.temperature_pressure_profile_generator(TP_input, name="isothermal_300K.txt")
     simulator.generate()
+    
     simulator.save()
     
     

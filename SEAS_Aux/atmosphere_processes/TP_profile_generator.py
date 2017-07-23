@@ -101,11 +101,13 @@ class temperature_pressure_profile_generator():
         save_path = os.path.join(self.path,self.name)
         check_file_exist(save_path)
         
+        print self.T
+        print self.pressures
         
         with open(save_path,"w") as file:
             for i,t in enumerate(self.T):
                 file.write(" ".join([str(self.pressures[i]),str(t)]))
-                if i == len(self.data)-1:
+                if i == len(self.T)-1:
                     break
                 file.write("\n")
 
