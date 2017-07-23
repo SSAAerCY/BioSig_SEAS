@@ -288,7 +288,10 @@ class TS_Simulator():
     def interpolate_CIA(self):
         
         
-        for 
+        for i in self.CIA_File:
+        
+        
+            print len(self.CIA_data[i])
         
         # the temperature need to be interpolated first
         
@@ -296,11 +299,6 @@ class TS_Simulator():
         # then the nu need to be interpolated and augmented
         # need db information on how to slice
         
-        
-        
-        pass
-
-
 
 
     def calculate_scale_height(self):
@@ -494,13 +492,6 @@ class TS_Simulator():
     
     def load_other_effects(self):
         pass
-
-if __name__ == "__main__":
-    
-    import SEAS_Utils.common_utils.configurable as config
-    user_input = config.Configuration("../../bin/dev/user_input_dev.cfg")
-    simulation = TS_Simulator(user_input)
-    Raw_TS = simulation.simulate_example()
 
 
 

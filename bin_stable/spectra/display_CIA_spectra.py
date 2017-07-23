@@ -28,8 +28,7 @@ DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
 from SEAS_Utils.common_utils.DIRs import HITRAN_CIA
-from SEAS_Aux.atmosphere_processes.CIA_selector import cia_selector
-from SEAS_Utils.common_utils.data_loader import two_column_file_loader,HITRAN_CIA_loader
+from SEAS_Main.atmosphere_effects.collision_induced_absorption import select_molecule_cia, HITRAN_CIA_data_processor
 import matplotlib.pyplot as plt
 
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
