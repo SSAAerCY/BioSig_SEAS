@@ -125,7 +125,11 @@ class TS_Simulator():
         return self.Final_TS
 
     def CIA_simulate(self):
+<<<<<<< HEAD
         pass
+=======
+        
+>>>>>>> e9a2ff7b1e79013afa8c0bb890f53d821abfff46
 
         
 
