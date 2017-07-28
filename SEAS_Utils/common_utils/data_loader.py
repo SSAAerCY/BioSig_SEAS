@@ -109,7 +109,7 @@ def molecule_cross_section_loader(inputs, cross_db, molecule):
     
     return nu, data
 
-def molecule_cross_section_loader2(inputs, outpath, molecule):
+def molecule_cross_section_loader2(inputs, db_dir, molecule):
     """
     Need to move this to the SEAS_Main
     """
@@ -119,13 +119,15 @@ def molecule_cross_section_loader2(inputs, outpath, molecule):
     numin = inputs["Spectra"]["Numin"]
     numax = inputs["Spectra"]["Numax"]
 
-    kwargs = {"dir"        :outpath,
+    kwargs = {"dir"        :db_dir,
               "db_name"    :"cross_section_Simulation_%s.db"%molecule,
               "user"       :"azariven",
               "DEBUG"      :False,
               "REMOVE"     :True,
               "BACKUP"     :False,
               "OVERWRITE"  :True}
+    
+    
     
     cross_db = dbm.database(**kwargs)  
     cross_db.access_db()  

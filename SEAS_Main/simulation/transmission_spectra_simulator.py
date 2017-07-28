@@ -19,6 +19,9 @@
 
 Functions related to calculate and using of transmission spectra
 
+for 0.8, need a full scale conversion of all list into dicts
+instead of normalized_xxx, let's have a dict with pressure_layers as keys and relevent data as data
+
 """
 import os
 import sys
@@ -34,10 +37,11 @@ ml = MultipleLocator(10)
 
 import SEAS_Main.atmosphere_geometry
 import SEAS_Main.atmosphere_property
-
+import SEAS_Main.analysis
 
 from SEAS_Aux.calculation.interpolation import interpolate1d
 import SEAS_Aux.calculation.astrophysics as calc 
+import SEAS_Aux.cross_section.hapi as hp
 
 from SEAS_Utils.common_utils.constants import *
 from SEAS_Utils.common_utils.timer import simple_timer
@@ -45,6 +49,9 @@ from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, mol
 from SEAS_Utils.common_utils.data_loader import two_column_file_loader,multi_column_file_loader, json_loader, molecule_cross_section_loader2
 from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 import SEAS_Utils.common_utils.db_management2 as dbm
+
+
+
 
 class TS_Simulator():
     """
@@ -69,9 +76,44 @@ class TS_Simulator():
         
         self.T_grid = [float(x) for x in user_input["Simulation_Control"]["T_Grid"]]
         self.P_grid = [float(x) for x in user_input["Simulation_Control"]["P_Grid"]]
-    
-    
+
+
     def simulate_example(self):
+        
+        self.Timer = simple_timer(4)
+        
+        #create a base flat spectra based on planetary parameters
+        self.Surface_g, self.Base_TS_Value = self.load_astrophysical_properties()
+        
+        # normalized pressure directly correspond to atmosphere layers.
+        self.normalized_pressure = self.load_atmosphere_pressure_layers()
+        
+        # load mixing ration files and determine what molecules are added to the simulation
+        # acquire the mixing ratio at each pressure (need to be interpolated to normalized pressure)
+        self.normalized_molecules, self.MR_Pressure, self.molecule_MR = self.load_mixing_ratio()
+        self.normalized_abundance = self.interpolate_mixing_ratio()
+        
+        # load temperature pressure profile
+        self.TP_Pressure, self.TP_Temperature = self.load_TP_profile()        
+        self.normalized_temperature = self.interpolate_TP_profile()
+
+        # calculate the scale height for each layer of the atmosphere
+        self.normalized_scale_height = self.calculate_scale_height()
+   
+        # load molecular cross section for main constituent of the atmosphere
+        # will check first to see if the molecule is in the database 
+        self.cross_db = self.check_molecules()
+        self.nu, self.normalized_cross_section = self.load_molecule_cross_section()
+        print "load time", self.Timer.elapse()
+    
+        self.Transit_Signal = self.load_atmosphere_geometry_model()
+        nu,trans = self.calculate_convolve(self.Transit_Signal)
+        
+        self.plot_result(nu,trans)
+        #return self.Transit_Signal   
+    
+    
+    def simulate_window(self):
         
         
         self.Timer = simple_timer(4)
@@ -103,21 +145,21 @@ class TS_Simulator():
         self.effects = self.load_effects()
 
         # determine atmosphereic effects to add in
-        self.Final_TS = self.load_atmosphere_geometry_model()
+        
+        self.Transit_Signal = self.load_atmosphere_geometry_model()
+        nu,trans = self.calculate_convolve(self.Transit_Signal)
+        
+        self.absorption = self.load_atmosphere_geometry_model2()
+        nu,absorp = self.calculate_convolve(self.absorption)
         print "calc time", self.Timer.elapse()
         
-        plt.title("Transit Signal for Simulated Atmosphere")
-        plt.xlabel(r'Wavelength ($\mu m$)')
-        plt.ylabel("Transit Signal (ppm)")    
-        plt.plot(10000./self.nu, self.Final_TS)
+        self.nu_window = self.analyze_spectra(nu,absorp)
         
-        ax = plt.gca()
-        ax.set_xscale('log')
-        plt.tick_params(axis='x', which='minor')
-        ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))          
+        self.plot_result(nu,trans)
+        #self.plot_result(self.nu,self.Transit_Signal)
         
-        plt.show()
-        return self.Final_TS
+        
+        return self.Transit_Signal
 
     def simulate_CIA(self):
         
@@ -153,14 +195,7 @@ class TS_Simulator():
 
         self.CIA_File, self.CIA_data = self.load_CIA(["H2"])
         self.normalized_CIA = self.interpolate_CIA()
-        
-
-
-
-
-
-
-
+    
     def load_astrophysical_properties(self):
         """
         There is going to be more development here in the future
@@ -172,8 +207,6 @@ class TS_Simulator():
         self.R_planet        = float(self.user_input["Planet"]["R_Planet"])*R_Earth
         self.M_planet        = float(self.user_input["Planet"]["M_Planet"])*M_Earth
         
-        
-
         Surface_g = calc.calc_SurfaceG(self.M_planet, self.R_planet)
         Base_TS_Value   = (self.R_planet/self.R_Star)**2
         
@@ -187,8 +220,6 @@ class TS_Simulator():
         
         self.numin = float(self.user_input["Spectra"]["Numin"])
         self.numax = float(self.user_input["Spectra"]["Numax"])
-
-
         
     def load_atmosphere_pressure_layers(self):
         
@@ -283,23 +314,18 @@ class TS_Simulator():
         else:
             return [],data
 
-
-    
     def interpolate_CIA(self):
+        
+        print self.normalized_temperature
         
         
         for i in self.CIA_File:
-        
-        
             print len(self.CIA_data[i])
         
         # the temperature need to be interpolated first
-        
-        
         # then the nu need to be interpolated and augmented
         # need db information on how to slice
-        
-
+        return 
 
     def calculate_scale_height(self):
         
@@ -325,7 +351,14 @@ class TS_Simulator():
         say... data ranking system? data selection preferences?
         
         for now only from simulation db
+    
         """
+        if self.user_input["Simulation_Control"]["DB_Name"] == None:
+            return
+
+
+
+
         
         kwargs = {"dir"        :self.DB_DIR,
                   "db_name"    :self.user_input["Simulation_Control"]["DB_Name"],
@@ -451,7 +484,7 @@ class TS_Simulator():
                     molecular_ratio = normalized_abundance[j+i][m]
                     number_density = (normalized_pressure[j+i]/(BoltK*normalized_temperature[j+i]))*molecular_ratio
                     
-                    rayleigh = Rayleigh_array[m]
+                    rayleigh = Rayleigh_array[m]*molecular_ratio
                     sigma = normalized_cross_section[m][j+i][j+i]
                     
                     #rayleigh_scat, etc should be pre calculated
@@ -484,6 +517,85 @@ class TS_Simulator():
         Raw_Transit_Signal = Total_Transit_Signal
         return Raw_Transit_Signal
 
+    def load_atmosphere_geometry_model2(self):
+        
+        
+        
+        TotalBeams = len(self.normalized_pressure)
+        
+        normalized_pressure         = self.normalized_pressure
+        normalized_temperature      = self.normalized_temperature
+        normalized_molecules        = self.normalized_molecules
+        normalized_abundance        = self.normalized_abundance
+        normalized_cross_section    = self.normalized_cross_section
+        normalized_scale_height     = self.normalized_scale_height     
+        
+        
+        Total_Tau = np.zeros(len(self.nu))#*self.Base_TS_Value
+        base_layer = self.R_planet
+
+
+        Rayleigh_array = []
+        for molecule in normalized_molecules:
+            Rayleigh_array.append(calc.calc_rayleigh(molecule, self.nu))
+
+
+        for i in range(TotalBeams):
+            
+            if i == 0:
+                prev_layer = base_layer
+                base_layer += normalized_scale_height[i]
+                # skip the bottom layer? this is the beam that "touch" the surface
+                # need to think about this when rounding
+                continue
+    
+            # opacity per beam
+            BeamTau = []
+            prev_pathl = 0
+            target_layer = base_layer        
+            for j in range(TotalBeams-i):
+                
+                target_layer += normalized_scale_height[j+i]
+                pathl = np.sin(np.arccos(base_layer/target_layer))*target_layer - prev_pathl
+                prev_pathl += pathl   
+                
+                # opacity per chunk of the beam, this can be thought as the test tube case
+                ChunkTau = []        
+                for m,molecule in enumerate(normalized_molecules):        
+                    
+                    #weird how abundance and cross section are wired differently
+                    molecular_ratio = normalized_abundance[j+i][m]
+                    number_density = (normalized_pressure[j+i]/(BoltK*normalized_temperature[j+i]))*molecular_ratio
+                    
+                    rayleigh = Rayleigh_array[m]*molecular_ratio
+                    sigma = normalized_cross_section[m][j+i][j+i]
+                    
+                    #rayleigh_scat, etc should be pre calculated
+                    effects = sigma+rayleigh#+CIA+cloud
+        
+                    ChunkTau_Per_Molecule = number_density*(effects)*pathl*2*0.0001
+        
+                    if ChunkTau == []:
+                        ChunkTau = ChunkTau_Per_Molecule
+                    else:
+                        ChunkTau += ChunkTau_Per_Molecule   
+                        
+                if BeamTau == []:
+                    BeamTau = ChunkTau
+                else:
+                    BeamTau += ChunkTau                       
+            
+            
+            Total_Tau += BeamTau
+            
+            # update to the next beam up
+            prev_layer = base_layer
+            base_layer += normalized_scale_height[i]        
+            
+            
+        Raw_Transit_Signal = Total_Tau
+        return Raw_Transit_Signal
+
     def load_effects(self):
         """
         setup the effect template for what goes into each "test tube"
@@ -493,10 +605,75 @@ class TS_Simulator():
     def load_other_effects(self):
         pass
 
+    def calculate_convolve(self,ydata):
+        #if self.user_input["Observation"]["Convolve"] == "true":
+        amount = float(self.user_input["Observation"]["Convolve_Amount"])
+        nu,Transit_Signal,i1,i2,slit = hp.convolveSpectrum(self.nu,ydata,SlitFunction=hp.SLIT_RECTANGULAR,Resolution=amount,AF_wing=20.0)
+        
+        return nu,Transit_Signal
+    
+    def analyze_spectra(self, nu,trans):
+        
+        window = []
+        threshold = 1000
+        span = 100
+        
+        start = True
+        win = [0,0]
+        for i,n in enumerate(nu):
+            if trans[i] < threshold and start == True:
+                win[0] = n
+                start = False
+            if trans[i] > threshold and n>=win[0]+span and start == False:
+                win[1] = n
+                start = True
+                window.append(np.array(win))
+        
+        print os.listdir(self.user_input["Save"]["Window"]["path"])
+        
+        with open(os.path.join(self.user_input["Save"]["Window"]["path"],
+                               self.user_input["Save"]["Window"]["name"]),"w") as f:
+            for i in window:
+                f.write("%s-%s\n"%(i[0],i[1]))
+        
+        return window
 
+    def plot_result(self,nu,coef):
+        
+        def close_event():
+            plt.close() #timer calls this function after 3 seconds and closes the window 
+        
+        fig = plt.figure(figsize=(16,6))
+        timer = fig.canvas.new_timer(interval = 30000) #creating a timer object and setting an interval of 3000 milliseconds
+        timer.add_callback(close_event)
 
+        
+        plt.title("Transit Signal and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(self.normalized_molecules))
+        plt.xlabel(r'Wavelength ($\mu m$)')
+        plt.ylabel("Transit Signal (ppm)")    
 
+        fig_size = plt.rcParams["figure.figsize"]
+        print fig_size
+        plt.rcParams["figure.figsize"] = [20,6]
 
+        ax = plt.gca()
+        ax.set_xscale('log')
+        #ax.set_yscale("log")
+        plt.tick_params(axis='x', which='minor')
+        ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))          
 
+        for k in self.nu_window:
+            up,down = 10000./k[1],10000./k[0]
+            plt.axvspan(up,down,facecolor="k",alpha=0.2)
 
+        plt.plot(10000./nu, 1000000*coef,color="r")
 
+        
+        
+        save_dir  = self.user_input["Save"]["Plot"]["path"]
+        save_name = self.user_input["Save"]["Plot"]["name"] 
+        
+        plt.savefig(os.path.join(save_dir,save_name))
+
+        timer.start()
+        plt.show()
