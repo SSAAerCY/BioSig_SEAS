@@ -35,12 +35,15 @@ if __name__ == "__main__":
     
     user_input = config.Configuration("user_input_dev.cfg")
     
-    user_input["Simulation_Control"]["DB_DIR"]              = "Simulation"
-    user_input["Simulation_Control"]["DB_Name"]             = "cross_sec_simulation.db"
+    user_input["Simulation_Control"]["DB_DIR"]              = "Simulation_Band"
+    user_input["Simulation_Control"]["DB_Name"]             = None#"cross_sec_simulation.db"
     user_input["Simulation_Control"]["TP_Profile_Name"]     = "isothermal_300K.txt"
     user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "H2&He.txt"
 
-
+    user_input["Planet"]["R_Planet"] = 10
+    user_input["Planet"]["M_Planet"] = 300
+    
+    
     user_input["Atmosphere_Effects"]["CIA"] = "true"
 
     user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "Temp_H2&He_Cross_Section.npy"
