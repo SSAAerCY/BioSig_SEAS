@@ -59,6 +59,9 @@ if __name__ == "__main__":
     user_input["Save"]["Plot"]["path"] = "../../output/Plot_Result"
     user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename1
     
+    
+
+    
     simulation = theory.TS_Simulator(user_input)
     
     Raw_TS = simulation.simulate_NIST()         

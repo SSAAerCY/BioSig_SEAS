@@ -350,8 +350,12 @@ class TS_Simulator():
         
         self.nu_window = self.analyze_spectra(nu,absorp)
         
-        molecule_NIST = "C2H2"
-        x1,y1 = load_NIST_spectra(molecule_NIST,["wn","T"])
+        try:
+            molecule_NIST = self.user_input["NIST_Molecule"]
+        except:
+            molecule_NIST = "C2H2" 
+        
+        x1,y1 = load_NIST_spectra(molecule_NIST,["wn","T"],self.user_input["Smile"])
         
         y1 = np.array(y1)+(1-(np.mean(y1)+np.median(y1))/2)
         y1new = []
@@ -374,6 +378,8 @@ class TS_Simulator():
         Bio_Transit_Signal = self.load_atmosphere_geometry_model_NIST(molecule_NIST, sigma, comp)
         nu, bio_trans = self.calculate_convolve(Bio_Transit_Signal)
 
+
+        fig = plt.figure(figsize=(16,6))
         ax = plt.gca()
         ax.set_xscale('log')
         #ax.set_yscale("log")
@@ -384,14 +390,21 @@ class TS_Simulator():
             up,down = 10000./k[1],10000./k[0]
             plt.axvspan(up,down,facecolor="k",alpha=0.2)
 
-
-        plt.title("Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of C2H2 at 1ppm")
+        plt.title("Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of %s at 1ppm"%molecule_NIST)
         plt.xlabel(r'Wavelength ($\mu m$)')
         plt.ylabel("Transit Signal (ppm)")  
         
-        plt.plot(10000./nu,bio_trans*10**6)
-        plt.plot(10000./nu,trans*10**6)
-        plt.show()
+        plt1, = plt.plot(10000./nu,bio_trans*10**6, label="with_bio")
+        plt2, = plt.plot(10000./nu,trans*10**6, label="ref.")
+        
+        
+        save_dir  = self.user_input["Save"]["Plot"]["path"]
+        save_name = self.user_input["Save"]["Plot"]["name"] 
+        
+        plt.legend(handles=[plt1,plt2])
+        
+        plt.savefig(os.path.join(save_dir,save_name))
+        #plt.show()
         
 
 
@@ -1131,9 +1144,6 @@ class TS_Simulator():
         plt.xlabel(r'Wavelength ($\mu m$)')
         plt.ylabel("Transit Signal (ppm)")    
 
-        fig_size = plt.rcParams["figure.figsize"]
-        print fig_size
-        plt.rcParams["figure.figsize"] = [20,6]
 
         ax = plt.gca()
         ax.set_xscale('log')
