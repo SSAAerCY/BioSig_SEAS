@@ -45,7 +45,8 @@ from SEAS_Utils.common_utils.DIRs import Simulation_DB
 #constants
 from SEAS_Utils.common_utils.constants import *
 
-
+# data
+from SEAS_Utils.common_utils.data_loader import two_column_file_loader
 
 
 

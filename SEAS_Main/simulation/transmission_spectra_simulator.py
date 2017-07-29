@@ -26,6 +26,7 @@ instead of normalized_xxx, let's have a dict with pressure_layers as keys and re
 import os
 import sys
 import numpy as np
+import time
 from scipy import interpolate
 import matplotlib.pyplot as plt
 
@@ -38,6 +39,8 @@ ml = MultipleLocator(10)
 import SEAS_Main.atmosphere_geometry
 import SEAS_Main.atmosphere_property
 import SEAS_Main.analysis
+from SEAS_Main.atmosphere_effects.biosig_molecule import load_NIST_spectra
+
 
 from SEAS_Aux.calculation.interpolation import interpolate1d
 import SEAS_Aux.calculation.astrophysics as calc 
@@ -49,6 +52,8 @@ from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, mol
 from SEAS_Utils.common_utils.data_loader import two_column_file_loader,multi_column_file_loader, json_loader, molecule_cross_section_loader2
 from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 import SEAS_Utils.common_utils.db_management2 as dbm
+
+
 
 
 def find_nearest(array,value):
@@ -174,7 +179,6 @@ class TS_Simulator():
         self.plot_result(nu,trans)
         #return self.Transit_Signal   
     
-    
     def simulate_window(self):
         
         
@@ -215,7 +219,35 @@ class TS_Simulator():
         nu,absorp = self.calculate_convolve(self.absorption)
         print "calc time", self.Timer.elapse()
         
-        self.nu_window = self.analyze_spectra(nu,absorp)
+        self.nu_window = self.analyze_spectra(nu,trans,"T")
+       
+        """
+        plt.title("Absorption and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(self.normalized_molecules))
+        plt.xlabel(r'Wavelength ($\mu m$)')
+        plt.ylabel("absorption")    
+
+        fig_size = plt.rcParams["figure.figsize"]
+        print fig_size
+        plt.rcParams["figure.figsize"] = [20,6]
+
+        ax = plt.gca()
+        ax.set_xscale('log')
+        #ax.set_yscale("log")
+        plt.tick_params(axis='x', which='minor')
+        ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))          
+
+        for k in self.nu_window:
+            up,down = 10000./k[1],10000./k[0]
+            plt.axvspan(up,down,facecolor="k",alpha=0.2)
+
+        #plt.axhline(y=8520, linewidth=2, color = 'k')
+
+
+        plt.plot(10000./nu, absorp,color="r")
+        plt.plot(10000./np.array(self.stuff),np.ones(len(self.stuff))*1000,".")
+       
+        plt.show()
+        """
         
         self.plot_result(nu,trans)
         #self.plot_result(self.nu,self.Transit_Signal)
@@ -282,7 +314,88 @@ class TS_Simulator():
         plt.legend(handles=[plt1,plt2])
         plt.show()
 
-    
+    def simulate_NIST(self):
+
+        self.Timer = simple_timer(4)
+        
+        #create a base flat spectra based on planetary parameters
+        self.Surface_g, self.Base_TS_Value = self.load_astrophysical_properties()
+        
+        # normalized pressure directly correspond to atmosphere layers.
+        self.normalized_pressure = self.load_atmosphere_pressure_layers()
+        
+        # load mixing ration files and determine what molecules are added to the simulation
+        # acquire the mixing ratio at each pressure (need to be interpolated to normalized pressure)
+        self.normalized_molecules, self.MR_Pressure, self.molecule_MR = self.load_mixing_ratio()
+        self.normalized_abundance = self.interpolate_mixing_ratio()
+        
+        # load temperature pressure profile
+        self.TP_Pressure, self.TP_Temperature = self.load_TP_profile()        
+        self.normalized_temperature = self.interpolate_TP_profile()
+
+        # calculate the scale height for each layer of the atmosphere
+        self.normalized_scale_height = self.calculate_scale_height()
+        
+        self.cross_db = self.check_molecules()
+        self.nu, self.normalized_cross_section = self.load_molecule_cross_section()
+        print "load time", self.Timer.elapse()
+
+
+        self.Transit_Signal = self.load_atmosphere_geometry_model()
+        nu,trans = self.calculate_convolve(self.Transit_Signal)
+        
+        self.absorption = self.load_atmosphere_geometry_model2()
+        nu,absorp = self.calculate_convolve(self.absorption)
+        print "calc time", self.Timer.elapse()
+        
+        self.nu_window = self.analyze_spectra(nu,absorp)
+        
+        molecule_NIST = "C2H2"
+        x1,y1 = load_NIST_spectra(molecule_NIST,["wn","T"])
+        
+        y1 = np.array(y1)+(1-(np.mean(y1)+np.median(y1))/2)
+        y1new = []
+        for i in y1:
+            if i > 1:
+                y1new.append(1)
+            else:
+                y1new.append(i)
+        y1 = y1new        
+
+
+        Pref = 10000.
+        Tref = 300.        
+        nref = Pref/(BoltK*Tref)
+        lref = 0.05        
+        yinterp = test_interpolate(x1,y1,self.nu,"T")
+        sigma = -np.log(yinterp)/(nref*lref)*10000
+        
+        comp = 1*10**-6
+        Bio_Transit_Signal = self.load_atmosphere_geometry_model_NIST(molecule_NIST, sigma, comp)
+        nu, bio_trans = self.calculate_convolve(Bio_Transit_Signal)
+
+        ax = plt.gca()
+        ax.set_xscale('log')
+        #ax.set_yscale("log")
+        plt.tick_params(axis='x', which='minor')
+        ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))           
+        
+        for k in self.nu_window:
+            up,down = 10000./k[1],10000./k[0]
+            plt.axvspan(up,down,facecolor="k",alpha=0.2)
+
+
+        plt.title("Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of C2H2 at 1ppm")
+        plt.xlabel(r'Wavelength ($\mu m$)')
+        plt.ylabel("Transit Signal (ppm)")  
+        
+        plt.plot(10000./nu,bio_trans*10**6)
+        plt.plot(10000./nu,trans*10**6)
+        plt.show()
+        
+
+
+   
     def load_astrophysical_properties(self):
         """
         There is going to be more development here in the future
@@ -556,12 +669,13 @@ class TS_Simulator():
         Total_Transit_Signal = np.ones(len(self.nu))*self.Base_TS_Value
         base_layer = self.R_planet
 
+        
 
         Rayleigh_array = []
         for molecule in normalized_molecules:
             Rayleigh_array.append(calc.calc_rayleigh(molecule, self.nu))
 
-
+        
         for i in range(TotalBeams):
             
             if i == 0:
@@ -617,7 +731,11 @@ class TS_Simulator():
             # update to the next beam up
             prev_layer = base_layer
             base_layer += normalized_scale_height[i]        
-            
+        
+        
+        self.min_signal = (self.R_planet/self.R_Star)**2
+        self.max_signal = ((self.R_planet+sum(normalized_scale_height))/self.R_Star)**2
+        
             
         Raw_Transit_Signal = Total_Transit_Signal
         return Raw_Transit_Signal
@@ -702,9 +820,7 @@ class TS_Simulator():
         return Raw_Transit_Signal
 
     def load_atmosphere_geometry_model_CIA(self):
-        
-        
-        
+   
         TotalBeams = len(self.normalized_pressure)
         
         normalized_pressure         = self.normalized_pressure
@@ -763,7 +879,7 @@ class TS_Simulator():
                     #rayleigh_scat, etc should be pre calculated
                     effects = sigma+rayleigh#+CIA+cloud
         
-                    ChunkTau_Per_Molecule = number_density*(effects)*pathl*2*0.0001
+                    ChunkTau_Per_Molecule = number_density*(effects)*pathl*2*100*100**-3
         
                     if ChunkTau == []:
                         ChunkTau = ChunkTau_Per_Molecule
@@ -783,7 +899,7 @@ class TS_Simulator():
                     
                     CIA_sigma = CIA[j+i]
                     
-                    Chunk_CIA_Tau = number_density1*number_density2*CIA_sigma*pathl*2*0.0001*100**-3
+                    Chunk_CIA_Tau = number_density1*number_density2*CIA_sigma*pathl*2*100*100**-3*100**-3
 
                     ChunkTau += Chunk_CIA_Tau                
                 
@@ -808,6 +924,108 @@ class TS_Simulator():
         Raw_Transit_Signal = Total_Transit_Signal
         return Raw_Transit_Signal
 
+    def load_atmosphere_geometry_model_NIST(self, target_smile, target_smile_I, target_composition):
+
+        TotalBeams = len(self.normalized_pressure)
+        
+        normalized_pressure         = self.normalized_pressure
+        normalized_temperature      = self.normalized_temperature
+        normalized_molecules        = self.normalized_molecules
+        normalized_abundance        = self.normalized_abundance
+        normalized_cross_section    = self.normalized_cross_section
+        normalized_scale_height     = self.normalized_scale_height     
+        
+        
+        Total_Transit_Signal = np.ones(len(self.nu))*self.Base_TS_Value
+        base_layer = self.R_planet
+
+
+        Rayleigh_array = []
+        for molecule in normalized_molecules:
+            Rayleigh_array.append(calc.calc_rayleigh(molecule, self.nu))
+
+
+        for i in range(TotalBeams):
+            
+            if i == 0:
+                prev_layer = base_layer
+                base_layer += normalized_scale_height[i]
+                # skip the bottom layer? this is the beam that "touch" the surface
+                # need to think about this when rounding
+                continue
+    
+            # opacity per beam
+            BeamTau = []
+            prev_pathl = 0
+            target_layer = base_layer        
+            for j in range(TotalBeams-i):
+                
+                target_layer += normalized_scale_height[j+i]
+                pathl = np.sin(np.arccos(base_layer/target_layer))*target_layer - prev_pathl
+                prev_pathl += pathl   
+                
+                # opacity per chunk of the beam, this can be thought as the test tube case
+                ChunkTau = []        
+                
+                # to compensate for adding varied mixing ratio of trace biosignature molecules
+                compensate_param = 1-target_composition
+                
+                
+                for m,molecule in enumerate(normalized_molecules):        
+                    
+                    #weird how abundance and cross section are wired differently
+                    molecular_ratio = normalized_abundance[j+i][m]*compensate_param
+                    number_density = (normalized_pressure[j+i]/(BoltK*normalized_temperature[j+i]))*molecular_ratio
+                    
+                    rayleigh = Rayleigh_array[m]*molecular_ratio
+                    sigma = normalized_cross_section[m][j+i][j+i]
+                    
+                    #rayleigh_scat, etc should be pre calculated
+                    effects = sigma+rayleigh#+CIA+cloud
+        
+                    ChunkTau_Per_Molecule = number_density*(effects)*pathl*2*100*100**-3
+        
+                    if ChunkTau == []:
+                        ChunkTau = ChunkTau_Per_Molecule
+                    else:
+                        ChunkTau += ChunkTau_Per_Molecule   
+                
+                
+                biosig_number_density = (normalized_pressure[j+i]/(BoltK*normalized_temperature[j+i]))*target_composition
+                
+                # unfortunately this is what we can do at the moment ... need to scale this cross section some how...
+                # also interpolation makes the array to be 11898 wide... weird.
+                scale = 1
+                biosig_sigma = target_smile_I*scale
+                
+                BioSigTau = biosig_number_density*(biosig_sigma)*pathl*2*100*100**-3
+                
+                
+                
+                ChunkTau += BioSigTau                
+                
+                
+                
+                
+                if BeamTau == []:
+                    BeamTau = ChunkTau
+                else:
+                    BeamTau += ChunkTau                       
+            
+            
+            BeamTrans = calc.calc_transmittance(BeamTau)  
+            RingArea = (base_layer**2-prev_layer**2)/self.R_Star**2
+            
+            Ring_Transit_Signal = (1-BeamTrans)*RingArea
+            Total_Transit_Signal += Ring_Transit_Signal
+            
+            # update to the next beam up
+            prev_layer = base_layer
+            base_layer += normalized_scale_height[i]        
+            
+            
+        Raw_Transit_Signal = Total_Transit_Signal
+        return Raw_Transit_Signal
 
 
     def load_effects(self):
@@ -826,25 +1044,72 @@ class TS_Simulator():
         
         return nu,Transit_Signal
     
-    def analyze_spectra(self, nu,trans):
+    def analyze_spectra(self, nu, coef, type="A"):
         
-        window = []
-        threshold = 1000
-        span = 100
+        if type == "A":
         
-        start = True
-        win = [0,0]
-        for i,n in enumerate(nu):
-            if trans[i] < threshold and start == True:
-                win[0] = n
-                start = False
-            if trans[i] > threshold and n>=win[0]+span and start == False:
-                win[1] = n
-                start = True
-                window.append(np.array(win))
+            window = []
+            threshold = 200.
+            span = 100.
+            
+            start = True
+            win = [0,0]
+            
+            self.stuff = []
+            for i,n in enumerate(nu):
+                
+                if coef[i] < threshold and start == True:
+                    win[0] = n
+                    self.stuff.append(n)
+                    start = False
+                if coef[i] > threshold and start == False:
+                    
+                    self.stuff.append(n)
+                    if n>=win[0]+span:
+                        win[1] = n
+                        start = True
+                        window.append(np.array(win))
+                    else:
+                        win[0] = n
+                        start = True
         
-        print os.listdir(self.user_input["Save"]["Window"]["path"])
-        
+        elif type == "T":
+            
+            window = []
+            threshold = 0.3
+            span = 100.
+            start = True
+            win = [0,0]
+                        
+            Min = self.min_signal
+            Max = max(coef)#self.max_signal
+            
+            threshold = Min+(Max-Min)*threshold
+            print coef
+            print threshold, min(coef),max(coef)
+            self.threshold = threshold
+            
+            self.stuff = []
+            for i,n in enumerate(nu):
+                
+                if coef[i] < threshold and start == True:
+                    win[0] = n
+                    self.stuff.append(n)
+                    start = False
+                if coef[i] > threshold and start == False:
+                    
+                    self.stuff.append(n)
+                    if n>=win[0]+span:
+                        win[1] = n
+                        start = True
+                        window.append(np.array(win))
+                    else:
+                        win[0] = n
+                        start = True
+
+            
+            
+        print window
         with open(os.path.join(self.user_input["Save"]["Window"]["path"],
                                self.user_input["Save"]["Window"]["name"]),"w") as f:
             for i in window:
@@ -880,8 +1145,10 @@ class TS_Simulator():
             up,down = 10000./k[1],10000./k[0]
             plt.axvspan(up,down,facecolor="k",alpha=0.2)
 
-        plt.plot(10000./nu, 1000000*coef,color="r")
+        plt.axhline(y=self.threshold*10**6, linewidth=2, color = 'k')
 
+
+        plt.plot(10000./nu, 1000000*coef,color="r")
         
         
         save_dir  = self.user_input["Save"]["Plot"]["path"]
