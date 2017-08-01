@@ -22,23 +22,65 @@ More Modes is going to come
 
 """
 
+import os
+import sys
+import numpy as np
 import matplotlib.pyplot as plt
 
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
-def simple_plot(nu, coef, shows=True):
-    
-    plt.plot(nu,coef)
-    
-    if shows:
-        plt.show()
 
-def show():
+from SEAS_Utils.common_utils.data_saver import check_path_exist, check_file_exist
+
+class Plotter():
     
-    plt.show()
+    def __init__(self, x, y,
+                 line_style = "-", color = None,
+                 title = "A plot", xlabel = "xlabel", ylabel = "ylabel",
+                 show = True, time = None,
+                 save = False, save_path = "", save_name = "Temp_Plot.png",
+                 overwrite = False
+                 ):
+        """
+        x and y are double arrays here... or in another plotter?
+        or ... simply make this powerful?
+        """
+        
+        self.Figure = plt.Figure()
+        
+        self.x = y
+        self.y = y
+        
+        self.xlabel = xlabel
+        self.ylabel = ylabel
+        self.title = title
+        
+        self.line_style = line_style
+        self.color = color
+        
+        
+
+        self.show = show
+        self.time = time
+        
+        
+        self.save = save
+        
+        
+        check_path_exist(save_path)
+        
+        self.savename = os.path.join(save_path,save_name)        
     
     
+
     
     
+    def set_log(self):
+        pass
     
-    
+
+    def show_plot(self):
+        
+        plt.show()  
     

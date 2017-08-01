@@ -30,6 +30,9 @@ import sys
 import json
 import numpy as np
 import SEAS_Utils.common_utils.db_management2 as dbm
+from openpyxl import load_workbook, Workbook
+
+from data_saver import check_path_exist, check_file_exist
 
 
 def two_column_file_loader(path,spliter=None,type="float",skip=0):
@@ -80,9 +83,7 @@ def json_loader(path):
 
     return data
 
-def database_loader(input):
-    "TBD, keep this here."
-    pass
+
 
 def molecule_cross_section_loader(inputs, cross_db, molecule):
     """
@@ -160,5 +161,37 @@ def HITRAN_Line_List_reference():
 
 
 
+class Excel_Loader():
+    
+    def __init__(self, path, name, sheetname="sheet"):
+        
+        #check_path_exist(path)
+        #check_file_exist
+        
+        self.path = path
+        self.name = name
+        self.sheetname = sheetname
+        
+        self.file = os.path.join(self.path,self.name)
+        
+    
+    def create(self):
+        
+        self.WBI = Workbook()
+    
+    
+    def load(self):
+        
+        self.WBI = load_workbook(self.file)
+        input_data = self.WBI[self.sheetname]
+        
+
+class database_loader():
+    "TBD, keep this here."
+    
+    def __init__(self):
+        
+        pass
+        
 
 

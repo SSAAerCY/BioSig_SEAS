@@ -219,7 +219,7 @@ class TS_Simulator():
         nu,absorp = self.calculate_convolve(self.absorption)
         print "calc time", self.Timer.elapse()
         
-        self.nu_window = self.analyze_spectra(nu,trans,"T")
+        self.nu_window = self.spectra_window(nu,trans,"T")
        
         """
         plt.title("Absorption and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(self.normalized_molecules))
@@ -348,7 +348,7 @@ class TS_Simulator():
         nu,absorp = self.calculate_convolve(self.absorption)
         print "calc time", self.Timer.elapse()
         
-        self.nu_window = self.analyze_spectra(nu,absorp)
+        self.nu_window = self.spectra_window(nu,absorp)
         
         try:
             molecule_NIST = self.user_input["NIST_Molecule"]
@@ -665,7 +665,75 @@ class TS_Simulator():
         
         return nu, normalized_cross_section
 
-    def load_atmosphere_geometry_model(self):
+    def load_bio_molecule_cross_section(self, bio_molecule, data_type):
+        
+        normalized_bio_molecule_xsec = []
+        
+        if bio_molecule in self.normalized_molecules:
+            print "bio molecule already in molecule list, no changes"
+            return [],[]
+        
+        if bio_molecule == "N2" or bio_molecule == "He":
+            print "Invalid Bio Molecule"
+            return [],[]
+            
+        
+        if data_type == "NIST":
+            pass
+        elif data_type == "HITRAN_Lines":
+            # need to check if molecule is in database
+            
+            
+            
+            if self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_saved"] == "true":
+                savepath = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savepath"])
+                savename = os.path.join(savepath,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savename"])
+                if check_file_exist(savename):
+                    print "Bio Cross Section Loaded from Save"
+                    return np.load(savename)      
+            
+            
+            nu, raw_cross_section_grid = molecule_cross_section_loader2(self.user_input, self.DB_DIR, bio_molecule)
+
+            print "load:%s"%self.Timer.elapse(),
+            processed_cross_section = []
+            for layer_cross_section in raw_cross_section_grid:
+                
+                raw_cross_section_by_wn = np.array(layer_cross_section).T
+                pro_cross_section_by_wn = []
+
+                x = self.T_grid
+                X = self.normalized_temperature           
+                for y in raw_cross_section_by_wn:
+                    pro_cross_section_by_wn.append(interpolate1d(x,y,X))
+
+                # something is definately wrong here with saving too much data. we don't need a 24x24 grid. just 24x2
+                # also no need to interpolate if isothermal atmosphere
+                processed_cross_section.append(np.array(pro_cross_section_by_wn).T)
+
+            normalized_bio_molecule_xsec.append(processed_cross_section)
+            print "inte:%s"%self.Timer.elapse()
+            
+            
+            if self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_saved"] == "true":
+                
+                savepath = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savepath"])
+                check_path_exist(savepath)
+                savename = os.path.join(savepath,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savename"])           
+                
+                np.save(savename, [nu,normalized_bio_molecule_xsec])
+                print "\nInterpolated Bio Cross Section Saved!"            
+            
+            
+            return nu, normalized_bio_molecule_xsec
+            
+    
+    def update_mixing_ratio(self):
+        pass
+
+
+
+    def load_atmosphere_geometry_model(self,bio=False):
         
         
         
@@ -677,6 +745,12 @@ class TS_Simulator():
         normalized_abundance        = self.normalized_abundance
         normalized_cross_section    = self.normalized_cross_section
         normalized_scale_height     = self.normalized_scale_height     
+        
+        
+        if bio:
+            normalized_cross_section = self.bio_normalized_cross_section
+            normalized_abundance     = self.bio_normalized_abundance
+            normalized_molecules     = self.bio_normalized_molecules
         
         
         Total_Transit_Signal = np.ones(len(self.nu))*self.Base_TS_Value
@@ -1057,13 +1131,11 @@ class TS_Simulator():
         
         return nu,Transit_Signal
     
-    def analyze_spectra(self, nu, coef, type="A"):
+    def spectra_window(self, nu, coef, type="A",threshold=200.,span=100.):
         
         if type == "A":
         
             window = []
-            threshold = 200.
-            span = 100.
             
             start = True
             win = [0,0]
@@ -1089,17 +1161,16 @@ class TS_Simulator():
         elif type == "T":
             
             window = []
-            threshold = 0.3
-            span = 100.
             start = True
             win = [0,0]
                         
             Min = self.min_signal
             Max = max(coef)#self.max_signal
+            if threshold > 1:
+                threshold = 1000/threshold
+            
             
             threshold = Min+(Max-Min)*threshold
-            print coef
-            print threshold, min(coef),max(coef)
             self.threshold = threshold
             
             self.stuff = []
@@ -1121,8 +1192,6 @@ class TS_Simulator():
                         start = True
 
             
-            
-        print window
         with open(os.path.join(self.user_input["Save"]["Window"]["path"],
                                self.user_input["Save"]["Window"]["name"]),"w") as f:
             for i in window:
@@ -1168,5 +1237,66 @@ class TS_Simulator():
 
         timer.start()
         plt.show()
+
+
+    def analyze_spectra_detection(self,nu,trans,bio_trans):
+        
+        noise_level = 10
+        detection = False
+        Detected = []
+        
+        for i in self.nu_window:
+            detected = False
+            reference =  trans[list(nu).index(i[0]):list(nu).index(i[1])]
+            signal = bio_trans[list(nu).index(i[0]):list(nu).index(i[1])]
+            
+            
+            # above certain ppm
+            difference = max(signal-reference)*10**6
+            # above certain comparision
+            comparison = max((signal-self.min_signal)/(reference-self.min_signal))
+        
+            if difference > 3*noise_level:
+                detection = True
+                detected = True
+            if comparison > 2:
+                detection = True
+                detected = True
+                
+            
+            Detected.append(detected)
+                
+        
+        return detection, Detected
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+
+
+
+
+
 
 

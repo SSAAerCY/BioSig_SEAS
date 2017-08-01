@@ -14,42 +14,45 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-Here is a list of useful common imports for SEAS
-This code should not be executed
 
 """
+Test if data plotter is functioning correctly
+ 
+
+"""
+
+
 import os
 import sys
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-#plotting
-import SEAS_Utils.common_utils.data_plotter as plt
-import matplotlib.pyplot as plt
-
-#timer
-from SEAS_Utils.common_utils.timer import simple_timer
-
-#dbm
-import SEAS_Utils.common_utils.db_management2 as dbm
-
-#config
-import SEAS_Utils.common_utils.configurable as config
-
-#DIR
-from SEAS_Utils.common_utils.DIRs import Simulation_DB
-
-#constants
-from SEAS_Utils.common_utils.constants import *
-
-# data
-from SEAS_Utils.common_utils.data_loader import two_column_file_loader
-
-# save data
-from SEAS_Utils.common_utils.data_saver import check_path_exist, check_file_exist
+import SEAS_Utils.common_utils.data_plotter as plotter
 
 
 
+if __name__ == "__main__":
+    
+    
+    x = [1,2,3]
+    y = [2,4,5]
+    
+    inputs = 
+    
+    Title = "Testing Plot"
+    
+    
+    
+    Plotter = plotter.Plotter(x,y,inputs)
+
+
+
+
+
+
+
+
+    
+    
+    
