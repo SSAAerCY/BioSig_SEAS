@@ -26,6 +26,10 @@ import os,sys
 import shutil
 
 def to_bool(x):
+    
+    if x == True or x == False:
+        return x
+    
     try:
         if x.lower() in ['true', 'yes']:
             return True

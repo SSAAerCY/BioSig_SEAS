@@ -24,16 +24,118 @@ Hash is first introduced here for temporary file saving
 """
 import os
 import sys
-
+import numpy as np
+import matplotlib.pyplot as plt
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
+
+
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+ml = MultipleLocator(10)
+
+
+
+import SEAS_Utils as utils
 from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 
 from SEAS_Utils.common_utils.timer import simple_timer
 import SEAS_Utils.common_utils.configurable as config
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
+
+
+def simulate_NIST(s):
+
+    s.Timer = simple_timer(4)
+    
+    #create a base flat spectra based on planetary parameters
+    s.Surface_g, s.Base_TS_Value = s.load_astrophysical_properties()
+    
+    # normalized pressure directly correspond to atmosphere layers.
+    s.normalized_pressure = s.load_atmosphere_pressure_layers()
+    
+    # load mixing ration files and determine what molecules are added to the simulation
+    # acquire the mixing ratio at each pressure (need to be interpolated to normalized pressure)
+    s.normalized_molecules, s.MR_Pressure, s.molecule_MR = s.load_mixing_ratio()
+    s.normalized_abundance = s.interpolate_mixing_ratio()
+    
+    # load temperature pressure profile
+    s.TP_Pressure, s.TP_Temperature = s.load_TP_profile()        
+    s.normalized_temperature = s.interpolate_TP_profile()
+    
+    # calculate the scale height for each layer of the atmosphere
+    s.normalized_scale_height = s.calculate_scale_height()
+    
+    # load molecular cross section for main constituent of the atmosphere
+    # will check first to see if the molecule is in the database 
+    s.cross_db = s.check_molecules()
+    s.nu, s.normalized_cross_section = s.load_molecule_cross_section()
+    
+    # load biosignature molecules
+    bio_enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"])
+    if bio_enable == True:
+        data_type     = s.user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"]
+        bio_molecule  = s.user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"]
+        bio_abundance = utils.to_float(s.user_input["Atmosphere_Effects"]["Bio_Molecule"]["abundance"])
+        s.is_smile      = utils.to_bool(s.user_input["Atmosphere_Effects"]["Bio_Molecule"]["is_smile"])
+        s.nu, s.bio_cross_section = s.load_bio_molecule_cross_section(bio_molecule, data_type)
+        
+
+        
+        s.bio_normalized_cross_section = np.concatenate([s.normalized_cross_section, s.bio_cross_section], axis=0)
+
+        # modify the molecular abundance after adding biosignatures
+        # scale heights untouched still since effect is small
+        s.bio_normalized_abundance = []
+        for i,abundance in enumerate(s.normalized_abundance):
+            s.bio_normalized_abundance.append([])
+            for j in abundance:
+                s.bio_normalized_abundance[i].append(j*(1-bio_abundance))
+            s.bio_normalized_abundance[i].append(bio_abundance)
+        s.bio_normalized_molecules = np.concatenate([s.normalized_molecules,[bio_molecule]], axis=0)
+
+    print "load time", s.Timer.elapse()
+    
+    # load rayleigh scattering
+    Rayleigh_enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["Rayleigh"]["enable"])
+    if Rayleigh_enable:
+        s.normalized_rayleigh = s.load_rayleigh_scattering()   
+    
+    
+    # calculate transmission spectra
+    s.Reference_Transit_Signal = s.load_atmosphere_geometry_model()
+    nu,ref_trans = s.calculate_convolve(s.Reference_Transit_Signal)
+    
+    s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable)
+    nu,bio_trans = s.calculate_convolve(s.Bio_Transit_Signal)
+    
+
+
+    fig = plt.figure(figsize=(16,6))
+    ax = plt.gca()
+    ax.set_xscale('log')
+    plt.tick_params(axis='x', which='minor')
+    ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))           
+    
+
+    plt.title("Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of %s at %s ppm"%(bio_molecule,bio_abundance*10**6))
+    plt.xlabel(r'Wavelength ($\mu m$)')
+    plt.ylabel("Transit Signal (ppm)")  
+    
+    plt1, = plt.plot(10000./nu,bio_trans*10**6, label="with_bio")
+    plt2, = plt.plot(10000./nu,ref_trans*10**6, label="ref.")
+    
+    plt.legend(handles=[plt1,plt2])
+    
+    if utils.to_bool(user_input["Save"]["Plot"]["save"]):
+        save_dir  = s.user_input["Save"]["Plot"]["path"]
+        save_name = s.user_input["Save"]["Plot"]["name"] 
+        plt.savefig(os.path.join(save_dir,save_name))
+    else:    
+        plt.show()
+
+
 
 
 if __name__ == "__main__":
@@ -55,7 +157,14 @@ if __name__ == "__main__":
     user_input["Save"]["Window"]["path"] = "../../output/Simple_Atmosphere_Window"
     user_input["Save"]["Window"]["name"] = "%s_Window_A1000_S100.txt"%Filename1
     
+    user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
+    user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"
+    user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = "C(C)NCC(O)"
+    user_input["Atmosphere_Effects"]["Bio_Molecule"]["abundance"] = 1*10**-6
+    user_input["Atmosphere_Effects"]["Bio_Molecule"]["is_smile"] = False
+    
     user_input["Save"]["Plot"] = {}
+    user_input["Save"]["Plot"]["save"] = False    
     user_input["Save"]["Plot"]["path"] = "../../output/Plot_Result"
     user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename1
     
@@ -64,5 +173,5 @@ if __name__ == "__main__":
     
     simulation = theory.TS_Simulator(user_input)
     
-    Raw_TS = simulation.simulate_NIST()         
+    simulate_NIST(simulation)         
     

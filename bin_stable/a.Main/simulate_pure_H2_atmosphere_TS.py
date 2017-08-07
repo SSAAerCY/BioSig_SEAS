@@ -50,9 +50,9 @@ if __name__ == "__main__":
 
     simulation = theory.TS_Simulator(user_input)
     
+    #Raw_TS = simulation.simulate_CIA()
+    
     Raw_TS = simulation.simulate_CIA()
-    
-    
     
     
     
