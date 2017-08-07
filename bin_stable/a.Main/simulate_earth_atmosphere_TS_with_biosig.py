@@ -25,6 +25,7 @@ Hash is first introduced here for temporary file saving
 import os
 import sys
 import numpy as np
+import random
 import matplotlib.pyplot as plt
 
 DIR = os.path.abspath(os.path.dirname(__file__))
@@ -44,6 +45,7 @@ from SEAS_Utils.common_utils.timer import simple_timer
 import SEAS_Utils.common_utils.configurable as config
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
 
+from SEAS_Utils.common_utils.data_loader import NIST_Smile_List
 
 def simulate_NIST(s):
 
@@ -98,11 +100,16 @@ def simulate_NIST(s):
     print "load time", s.Timer.elapse()
     
     # load rayleigh scattering
-    Rayleigh_enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["Rayleigh"]["enable"])
-    if Rayleigh_enable:
+    s.Rayleigh_enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["Rayleigh"]["enable"])
+    if s.Rayleigh_enable:
         s.normalized_rayleigh = s.load_rayleigh_scattering()   
     
     
+    s.Overlay_enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["Overlay"]["enable"])
+    if s.Overlay_enable:
+        o_nu, o_xsec = s.load_overlay_effects()
+        s.normalized_overlay = s.interpolate_overlay_effects(o_nu,o_xsec)
+         
     # calculate transmission spectra
     s.Reference_Transit_Signal = s.load_atmosphere_geometry_model()
     nu,ref_trans = s.calculate_convolve(s.Reference_Transit_Signal)
@@ -110,6 +117,8 @@ def simulate_NIST(s):
     s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable)
     nu,bio_trans = s.calculate_convolve(s.Bio_Transit_Signal)
     
+
+    s.nu_window = s.spectra_window(nu,ref_trans,"T",0.3, 100.)
 
 
     fig = plt.figure(figsize=(16,6))
@@ -125,6 +134,11 @@ def simulate_NIST(s):
     
     plt1, = plt.plot(10000./nu,bio_trans*10**6, label="with_bio")
     plt2, = plt.plot(10000./nu,ref_trans*10**6, label="ref.")
+
+    for k in s.nu_window:
+        up,down = 10000./k[1],10000./k[0]
+        plt.axvspan(up,down,facecolor="k",alpha=0.2)
+
     
     plt.legend(handles=[plt1,plt2])
     
@@ -157,20 +171,26 @@ if __name__ == "__main__":
     user_input["Save"]["Window"]["path"] = "../../output/Simple_Atmosphere_Window"
     user_input["Save"]["Window"]["name"] = "%s_Window_A1000_S100.txt"%Filename1
     
+    molecule_smiles, inchikeys = NIST_Smile_List()
+    
+    Bio_Molecule = random.choice(molecule_smiles)
+    
+    
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"
-    user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = "C(C)NCC(O)"
+    user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = Bio_Molecule
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["abundance"] = 1*10**-6
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["is_smile"] = False
+    
+    user_input["Atmosphere_Effects"]["Overlay"]["enable"] = True
+    
     
     user_input["Save"]["Plot"] = {}
     user_input["Save"]["Plot"]["save"] = False    
     user_input["Save"]["Plot"]["path"] = "../../output/Plot_Result"
     user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename1
     
-    
 
-    
     simulation = theory.TS_Simulator(user_input)
     
     simulate_NIST(simulation)         

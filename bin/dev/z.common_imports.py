@@ -47,6 +47,8 @@ from SEAS_Utils.common_utils.constants import *
 
 # data
 from SEAS_Utils.common_utils.data_loader import two_column_file_loader
+from SEAS_Utils.common_utils.data_loader import NIST_Smile_List
+import SEAS_Utils.common_utils.jdx_Reader as jdx
 
 # save data
 from SEAS_Utils.common_utils.data_saver import check_path_exist, check_file_exist

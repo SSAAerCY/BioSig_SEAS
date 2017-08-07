@@ -8,8 +8,24 @@ change spectra to something more general that covers Xsec, absorbance, Transmitt
 move the interpolation to another module
 """
 
-from imports import *
+#from imports import *
 
+import numpy as np
+from scipy import interpolate
+import os
+import sys
+import matplotlib.pyplot as plt
+
+BoltK = 1.38*10**-23
+
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
+import SEAS_Utils.common_utils.jdx_Reader as jdx
+import SEAS_Utils.common_utils.db_management2 as dbm
+
+'''
 def HITRAN_CIA():
     """
     steps of 25K from 200-3000
@@ -60,11 +76,11 @@ def Exomol_spectra():
                 coef.append(float(b))
             
     return nu,coef
-
+'''
 
 def HITRAN_xsec():
     
-    filename = "../../../data/HITRAN_xsec/O3_300.0_0.0_29164.0-40798.0_04.xsc"
+    filename = "../../input/absorption_data/HITRAN_Cross_Section/O3/O3_300.0_0.0_29164.0-40798.0_04.xsc"
     nu,coef = [],[]
     with open(filename,"r") as f:
         result = f.read().split("\n")
@@ -87,6 +103,8 @@ def HITRAN_xsec():
         
     return nu,coef
 
+
+"""
 def NIST_spectra(molecule,return_param):
 
     kwargs = {"db_name":"molecule_db.db",
@@ -131,7 +149,7 @@ def NIST_spectra(molecule,return_param):
     return x,y
 
 
-
+"""
 def HITRAN_spectra(molecule,spectra_param,return_param):
     
     
@@ -181,6 +199,7 @@ def HITRAN_spectra(molecule,spectra_param,return_param):
         elif return_param[1] == "C":
             y = coef    
     return x,y
+
 
 
 def find_nearest(array,value):
@@ -251,6 +270,9 @@ def test_interpolate(x1,y1,x2, type):
     return yinterp
 
 
+
+
+
 def NIST_All_Spectra(x2):
 
     kwargs = {"db_name":"molecule_db.db",
@@ -310,12 +332,10 @@ def NIST_All_Spectra(x2):
     print len(stuff)
     return smiles, stuff
 
-
+'''
 def temperature_scaling(sigma, T_0, T):
     
     return sigma*np.sqrt(T_0/T)
-
-
 
 def spectra_differences():
     P = 10000
@@ -355,14 +375,32 @@ def spectra_differences():
         
         print pathl, sum(mean_y_2-mean_y_1)/len(mean_y_2)
 
- 
+'''
 
 if __name__ == "__main__":
     
-    
     """
-    nu,coef = HITRAN_xsec()
-    plt.plot(nu,coef)
+    Pref = 10000.
+    Tref = 300.
+    nref = Pref/(BoltK*Tref)
+    
+    lref = 0.05
+
+    unit = 10000
+
+    numin = 400
+    numax = 30000
+    pathl = 1000000
+
+    molecule = "H2"    
+    
+    x1,y1 = HITRAN_xsec()
+    x2,y2 = HITRAN_spectra(molecule,[100000,300,numin,numax,pathl],["wn","T"])
+    
+    yinterp = test_interpolate(x1,y1,x2,"C")
+    
+    plt.plot(10000./x1,y1)
+    plt.plot(10000./x2,yinterp)
     plt.show()
     
     sys.exit()
@@ -422,6 +460,7 @@ if __name__ == "__main__":
             plt.plot(x2,y)
     
     """
+    """
     
     
     x2,sigma,temp = HITRAN_CIA()
@@ -438,7 +477,7 @@ if __name__ == "__main__":
     plt.show()
     
     
-    
+    """
     
     
     

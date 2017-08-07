@@ -641,8 +641,52 @@ class TS_Simulator():
     def update_mixing_ratio(self):
         pass
 
-    def load_atmosphere_geometry_model(self, bio=False, CIA=False, Rayleigh=True, result="Trans"):
+    def load_overlay_effects(self):
+        """
+        effects that are not officially included and still under test
         
+        """
+        filename = "../../input/absorption_data/HITRAN_Cross_Section/O3/O3_300.0_0.0_29164.0-40798.0_04.xsc"
+        nu,coef = [],[]
+        with open(filename,"r") as f:
+            result = f.read().split("\n")
+            for i in result[1:]:
+                if i != "":
+                    for j in i.split():
+                        coef.append(j)
+            
+            numin = 29164.
+            numax = 40798.
+            
+            wavmin = 10000./numax
+            wavmax = 10000./numin
+            
+            npts = 5818
+            
+            wav = np.linspace(wavmin,wavmax,npts)
+            
+            nu = 10000./wav[::-1]
+            
+        return nu,coef  
+    
+    def interpolate_overlay_effects(self,x1,y1):
+        
+        xsec = biosig_interpolate(x1,y1,self.nu,"C")
+        
+        
+        normalized_xsec = []
+        X = self.normalized_pressure        
+        Y = self.normalized_temperature  
+        normalized_bio_molecule_xsec = []
+        for i in range(len(X)):
+            normalized_bio_molecule_xsec.append([])
+            for j in range(len(Y)):
+                normalized_bio_molecule_xsec[i].append(xsec)
+                
+        return [normalized_bio_molecule_xsec]
+
+    def load_atmosphere_geometry_model(self, bio=False, CIA=False, Rayleigh=True, result="Trans"):
+        # convert all the toggle into self variables.
 
         TotalBeams = len(self.normalized_pressure)
         
@@ -672,7 +716,8 @@ class TS_Simulator():
             # assuming no rayleigh due to biosig molecules... could be wrong
             normalized_rayleigh.append(np.zeros(len(normalized_rayleigh[0])))
 
-      
+        if self.Overlay_enable:
+            normalized_overlay = self.normalized_overlay
 
 
 
@@ -710,6 +755,11 @@ class TS_Simulator():
                     rayleigh = normalized_rayleigh[m]*molecular_ratio
                     sigma = normalized_cross_section[m][j+i][j+i]
                     
+                    # adding ozone cross section augmentation
+                    if molecule == "O3" and self.Overlay_enable:
+                        overlay_sigma = normalized_overlay[0][j+i][j+i]
+                        sigma = sigma+overlay_sigma
+                    
                     #rayleigh_scat, etc should be pre calculated
                     effects = sigma+rayleigh#+CIA+cloud
         
@@ -737,7 +787,9 @@ class TS_Simulator():
                         Chunk_CIA_Tau = number_density1*number_density2*CIA_sigma*pathl*2*100*100**-3*100**-3
     
                         ChunkTau += Chunk_CIA_Tau      
+                
 
+                
                         
                 if BeamTau == []:
                     BeamTau = ChunkTau
@@ -772,14 +824,6 @@ class TS_Simulator():
         
         return Raw_Transit_Signal
 
-    def load_effects(self):
-        """
-        setup the effect template for what goes into each "test tube"
-        """
-        pass    
-    
-    def load_other_effects(self):
-        pass
 
     def calculate_convolve(self,ydata):
         #if self.user_input["Observation"]["Convolve"] == "true":
@@ -896,7 +940,10 @@ class TS_Simulator():
         #timer.start()
         plt.show()
 
-    def analyze_spectra_detection(self,nu,trans,bio_trans):
+    def analyze_spectra_detection(self,nu,trans,bio_trans,method="max"):
+        """
+        How to implement area under curve?
+        """
         
         noise_level = 10
         comp = 2

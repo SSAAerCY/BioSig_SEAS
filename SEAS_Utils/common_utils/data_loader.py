@@ -33,7 +33,7 @@ import SEAS_Utils.common_utils.db_management2 as dbm
 from openpyxl import load_workbook, Workbook
 
 from data_saver import check_path_exist, check_file_exist
-
+import SEAS_Utils.common_utils.jdx_Reader as jdx
 
 def two_column_file_loader(path,spliter=None,type="float",skip=0):
     """
@@ -159,6 +159,45 @@ def HITRAN_Line_List_reference():
         
     return molecule,component
 
+
+
+def NIST_Smile_List():
+
+
+    kwargs = {"db_name":"molecule_db.db",
+              "user":"azariven",
+              "dir":"/Users/mac/Workspace/BioSig_SEAS/input/molecule_info",
+              "DEBUG":False,"REMOVE":False,"BACKUP":False,"OVERWRITE":False}
+    
+    cross_db = dbm.database(**kwargs)   
+    cross_db.access_db()   
+
+    cmd = 'SELECT ID.smiles, ID.inchikey FROM ID,Spectra \
+            WHERE ID.inchikey=Spectra.inchikey AND Spectra.has_spectra="Y"'
+    
+    result = cross_db.c.execute(cmd)
+    data = np.array(result.fetchall()).T
+    
+    smiles = data[0]
+    inchikeys = data[1]
+
+    return smiles, inchikeys
+
+
+    """
+    path = os.path.join("/Users/mac/Workspace/BioSig/data/NIST_data/",spectras)
+
+    filename = ""
+    for j in os.listdir(path):
+        if "jdx" in j:
+            filename = os.path.join(path,j)
+            break
+    
+    
+    result = jdx.JdxFile(filename) 
+    x = result.wn()
+    y = result.absorb()
+    """
 
 
 class Excel_Loader():

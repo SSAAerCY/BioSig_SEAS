@@ -99,7 +99,7 @@ def biosig_interpolate(x1,y1,x2, type):
 
 
     if x1min > x2min and x1max < x2max:
-        print "A"
+        #print "A"
         left = find_nearest(x2,min(x1))+1
         right = find_nearest(x2,max(x1))
     
@@ -113,7 +113,7 @@ def biosig_interpolate(x1,y1,x2, type):
         yinterp = np.concatenate([yinterp_left,yinterp_middle, yinterp_right])
 
     elif x1min <= x2min and x1max < x2max:
-        print "B"
+        #print "B"
         right = find_nearest(x2,max(x1))
         
         if type == "A" or type == "C":
@@ -124,7 +124,7 @@ def biosig_interpolate(x1,y1,x2, type):
         yinterp = np.concatenate([yinterp_middle, yinterp_right])
     
     elif x1min > x2min and x1max >= x2max:
-        print "C"
+        #print "C"
         left = find_nearest(x2,min(x1))+1
     
         if type == "A" or type == "C":
@@ -136,7 +136,7 @@ def biosig_interpolate(x1,y1,x2, type):
         yinterp = np.concatenate([yinterp_left,yinterp_middle])
     
     else:
-        print "D"
+        #print "D"
         yinterp = f(x2)
 
     
