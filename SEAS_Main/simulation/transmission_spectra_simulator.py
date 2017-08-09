@@ -84,6 +84,10 @@ class TS_Simulator():
         self.P_grid = [float(x) for x in user_input["Simulation_Control"]["P_Grid"]]
 
         self.load_spectral_properties()
+        
+        self.Overlay_enable = False
+        
+        
 
     def simulate_example(self):
         
@@ -122,7 +126,10 @@ class TS_Simulator():
         self.Transit_Signal = self.load_atmosphere_geometry_model()
         nu,trans = self.calculate_convolve(self.Transit_Signal)
         
-        self.plot_result(nu,trans)
+        plt.plot(nu,trans)
+        plt.show()
+        
+        #self.plot_result(nu,trans)
         #return self.Transit_Signal   
     
     def simulate_window(self):
@@ -718,7 +725,6 @@ class TS_Simulator():
 
         if self.Overlay_enable:
             normalized_overlay = self.normalized_overlay
-
 
 
         Total_Tau = np.zeros(len(self.nu))

@@ -175,14 +175,14 @@ if __name__ == "__main__":
     
     Bio_Molecule = random.choice(molecule_smiles)
     
-    
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = Bio_Molecule
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["abundance"] = 1*10**-6
-    user_input["Atmosphere_Effects"]["Bio_Molecule"]["is_smile"] = False
+    user_input["Atmosphere_Effects"]["Bio_Molecule"]["is_smile"] = True
     
     user_input["Atmosphere_Effects"]["Overlay"]["enable"] = True
+    
     
     
     user_input["Save"]["Plot"] = {}
