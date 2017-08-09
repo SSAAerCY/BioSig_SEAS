@@ -166,7 +166,7 @@ def NIST_Smile_List():
 
     kwargs = {"db_name":"molecule_db.db",
               "user":"azariven",
-              "dir":"/Users/mac/Workspace/BioSig_SEAS/input/molecule_info",
+              "dir":"../../input/molecule_info",
               "DEBUG":False,"REMOVE":False,"BACKUP":False,"OVERWRITE":False}
     
     cross_db = dbm.database(**kwargs)   

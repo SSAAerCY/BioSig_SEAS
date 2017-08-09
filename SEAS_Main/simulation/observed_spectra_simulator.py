@@ -22,5 +22,43 @@ Functions related to simulating observed spectra based on calculated theoratical
 for 0.8, need a full scale conversion of all list into dicts
 instead of normalized_xxx, let's have a dict with pressure_layers as keys and relevent data as data
 
+Takes in a simulated theoretical spectra and add observational effects
+
+
 """
+import os
+import sys
+import numpy as np
+import time
+from scipy import interpolate
+import matplotlib.pyplot as plt
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+ml = MultipleLocator(10)
+
+
+
+
+
+
+
+class Observer():
+    
+    
+    def __init__(self, user_input, ):
+        
+        
+        
+        
+        
+        
+        
+    
+
+
+
+
 

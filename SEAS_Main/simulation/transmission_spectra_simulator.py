@@ -63,7 +63,7 @@ class TS_Simulator():
     """
     This is the main class for the planet transmission spectra simulation.
     
-    simulate a theoratical spectra of the planet transmission. 
+    simulate a theoretical spectra of the planet transmission. 
     does not have any observational effects
     
     mixing ratio and TP profiles are pre-calculated data.
@@ -86,8 +86,6 @@ class TS_Simulator():
         self.load_spectral_properties()
         
         self.Overlay_enable = False
-        
-        
 
     def simulate_example(self):
         
@@ -691,6 +689,7 @@ class TS_Simulator():
                 normalized_bio_molecule_xsec[i].append(xsec)
                 
         return [normalized_bio_molecule_xsec]
+
 
     def load_atmosphere_geometry_model(self, bio=False, CIA=False, Rayleigh=True, result="Trans"):
         # convert all the toggle into self variables.

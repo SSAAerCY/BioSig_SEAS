@@ -149,7 +149,7 @@ def simulate_NIST(s):
     else:    
         plt.show()
 
-
+    return s
 
 
 if __name__ == "__main__":
@@ -193,5 +193,5 @@ if __name__ == "__main__":
 
     simulation = theory.TS_Simulator(user_input)
     
-    simulate_NIST(simulation)         
+    simulation = simulate_NIST(simulation)         
     
