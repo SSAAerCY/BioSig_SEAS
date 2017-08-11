@@ -43,11 +43,14 @@ from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 
 from SEAS_Utils.common_utils.timer import simple_timer
 import SEAS_Utils.common_utils.configurable as config
+
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
+import SEAS_Main.simulation.observed_spectra_simulator as observe
+
 
 from SEAS_Utils.common_utils.data_loader import NIST_Smile_List
 
-def simulate_NIST(s):
+def simulate_NIST(s,o):
 
     s.Timer = simple_timer(4)
     
@@ -84,7 +87,6 @@ def simulate_NIST(s):
         s.nu, s.bio_cross_section = s.load_bio_molecule_cross_section(bio_molecule, data_type)
         
 
-        
         s.bio_normalized_cross_section = np.concatenate([s.normalized_cross_section, s.bio_cross_section], axis=0)
 
         # modify the molecular abundance after adding biosignatures
@@ -112,14 +114,13 @@ def simulate_NIST(s):
          
     # calculate transmission spectra
     s.Reference_Transit_Signal = s.load_atmosphere_geometry_model()
-    nu,ref_trans = s.calculate_convolve(s.Reference_Transit_Signal)
-    
     s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable)
-    nu,bio_trans = s.calculate_convolve(s.Bio_Transit_Signal)
     
-
-    s.nu_window = s.spectra_window(nu,ref_trans,"T",0.3, 100.)
-
+    # analyze the spectra
+    nu,ref_trans = o.calculate_convolve(s.nu, s.Reference_Transit_Signal)
+    nu,bio_trans = o.calculate_convolve(s.nu, s.Bio_Transit_Signal)
+    s.nu_window = o.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
+    
 
     fig = plt.figure(figsize=(16,6))
     ax = plt.gca()
@@ -183,8 +184,6 @@ if __name__ == "__main__":
     
     user_input["Atmosphere_Effects"]["Overlay"]["enable"] = True
     
-    
-    
     user_input["Save"]["Plot"] = {}
     user_input["Save"]["Plot"]["save"] = False    
     user_input["Save"]["Plot"]["path"] = "../../output/Plot_Result"
@@ -192,6 +191,7 @@ if __name__ == "__main__":
     
 
     simulation = theory.TS_Simulator(user_input)
+    observer = observe.OS_Simulator(user_input)
     
-    simulation = simulate_NIST(simulation)         
+    simulation = simulate_NIST(simulation, observer)         
     

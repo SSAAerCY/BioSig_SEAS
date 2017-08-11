@@ -41,7 +41,6 @@ import SEAS_Main.atmosphere_property
 import SEAS_Main.analysis
 from SEAS_Main.atmosphere_effects.biosig_molecule import load_NIST_spectra, biosig_interpolate
 
-
 from SEAS_Aux.calculation.interpolation import interpolate1d
 import SEAS_Aux.calculation.astrophysics as calc 
 import SEAS_Aux.cross_section.hapi as hp
@@ -52,11 +51,6 @@ from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, mol
 from SEAS_Utils.common_utils.data_loader import two_column_file_loader,multi_column_file_loader, json_loader, molecule_cross_section_loader2
 from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 import SEAS_Utils.common_utils.db_management2 as dbm
-
-
-
-
-
 
 
 class TS_Simulator():
@@ -114,163 +108,14 @@ class TS_Simulator():
         self.cross_db = self.check_molecules()
         self.nu, self.normalized_cross_section = self.load_molecule_cross_section()
         
-        
-        self.normalized_rayleigh = self.load_rayleigh_scattering()
-        
-        
-        
-        print "load time", self.Timer.elapse()
-    
-        self.Transit_Signal = self.load_atmosphere_geometry_model()
-        nu,trans = self.calculate_convolve(self.Transit_Signal)
-        
-        plt.plot(nu,trans)
-        plt.show()
-        
-        #self.plot_result(nu,trans)
-        #return self.Transit_Signal   
-    
-    def simulate_window(self):
-        
-        
-        self.Timer = simple_timer(4)
-        
-        #create a base flat spectra based on planetary parameters
-        self.Surface_g, self.Base_TS_Value = self.load_astrophysical_properties()
-        
-        # normalized pressure directly correspond to atmosphere layers.
-        self.normalized_pressure = self.load_atmosphere_pressure_layers()
-        
-        # load mixing ration files and determine what molecules are added to the simulation
-        # acquire the mixing ratio at each pressure (need to be interpolated to normalized pressure)
-        self.normalized_molecules, self.MR_Pressure, self.molecule_MR = self.load_mixing_ratio()
-        self.normalized_abundance = self.interpolate_mixing_ratio()
-        
-        # load temperature pressure profile
-        self.TP_Pressure, self.TP_Temperature = self.load_TP_profile()        
-        self.normalized_temperature = self.interpolate_TP_profile()
-
-        # calculate the scale height for each layer of the atmosphere
-        self.normalized_scale_height = self.calculate_scale_height()
-   
-        # load molecular cross section for main constituent of the atmosphere
-        # will check first to see if the molecule is in the database 
-        self.cross_db = self.check_molecules()
-        self.nu, self.normalized_cross_section = self.load_molecule_cross_section()
-        
         self.normalized_rayleigh = self.load_rayleigh_scattering()
         
         print "load time", self.Timer.elapse()
-
-        self.effects = self.load_effects()
-
-        # determine atmosphereic effects to add in
-        
-        self.Transit_Signal = self.load_atmosphere_geometry_model()
-        nu,trans = self.calculate_convolve(self.Transit_Signal)
-        
-        self.absorption = self.load_atmosphere_geometry_model2()
-        nu,absorp = self.calculate_convolve(self.absorption)
-        print "calc time", self.Timer.elapse()
-        
-        self.nu_window = self.spectra_window(nu,trans,"T",0.3, 100.)
-       
-        """
-        plt.title("Absorption and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(self.normalized_molecules))
-        plt.xlabel(r'Wavelength ($\mu m$)')
-        plt.ylabel("absorption")    
-
-        fig_size = plt.rcParams["figure.figsize"]
-        print fig_size
-        plt.rcParams["figure.figsize"] = [20,6]
-
-        ax = plt.gca()
-        ax.set_xscale('log')
-        #ax.set_yscale("log")
-        plt.tick_params(axis='x', which='minor')
-        ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))          
-
-        for k in self.nu_window:
-            up,down = 10000./k[1],10000./k[0]
-            plt.axvspan(up,down,facecolor="k",alpha=0.2)
-
-        #plt.axhline(y=8520, linewidth=2, color = 'k')
-
-
-        plt.plot(10000./nu, absorp,color="r")
-        plt.plot(10000./np.array(self.stuff),np.ones(len(self.stuff))*1000,".")
-       
-        plt.show()
-        """
-        
-        self.plot_result(nu,trans)
-        #self.plot_result(self.nu,self.Transit_Signal)
-        
-        
-        return self.Transit_Signal
-
-    def simulate_CIA(self):
-        
-        self.Timer = simple_timer(4)
-        
-        #create a base flat spectra based on planetary parameters
-        self.Surface_g, self.Base_TS_Value = self.load_astrophysical_properties()
-        
-        # normalized pressure directly correspond to atmosphere layers.
-        self.normalized_pressure = self.load_atmosphere_pressure_layers()
-        
-        # load mixing ration files and determine what molecules are added to the simulation
-        # acquire the mixing ratio at each pressure (need to be interpolated to normalized pressure)
-        self.normalized_molecules, self.MR_Pressure, self.molecule_MR = self.load_mixing_ratio()
-        self.normalized_abundance = self.interpolate_mixing_ratio()
-        
-        # load temperature pressure profile
-        self.TP_Pressure, self.TP_Temperature = self.load_TP_profile()        
-        self.normalized_temperature = self.interpolate_TP_profile()
-
-        # calculate the scale height for each layer of the atmosphere
-        self.normalized_scale_height = self.calculate_scale_height()
-
-        self.normalized_molecules, self.MR_Pressure, self.molecule_MR = self.load_mixing_ratio()
-        self.normalized_abundance = self.interpolate_mixing_ratio()
-        
-        # load temperature pressure profile
-        self.TP_Pressure, self.TP_Temperature = self.load_TP_profile()        
-        self.normalized_temperature = self.interpolate_TP_profile()
-
-        # calculate the scale height for each layer of the atmosphere
-        self.normalized_scale_height = self.calculate_scale_height()        
-
-        self.cross_db = self.check_molecules()
-        self.nu, self.normalized_cross_section = self.load_molecule_cross_section()
-        
-        self.normalized_rayleigh = self.load_rayleigh_scattering()
-
-        self.CIA_File, self.CIA_Data = self.load_CIA(["H2"])
-        self.normalized_CIA = self.interpolate_CIA()
-        
-        self.Transit_Signal_CIA = self.load_atmosphere_geometry_model(CIA=True)
-        
-        self.Transit_Signal = self.load_atmosphere_geometry_model()
-        
-        ax = plt.gca()
-        ax.set_xscale('log')
-        #ax.set_yscale("log")
-        plt.tick_params(axis='x', which='minor')
-        ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))           
-        
-
-        plt.title("Transit Signal and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(self.normalized_molecules))
-        plt.xlabel(r'Wavelength ($\mu m$)')
-        plt.ylabel("Transit Signal (ppm)")  
     
-       
-        plt1, = plt.plot(10000./self.nu, 1000000*self.Transit_Signal, label="Molecular")
-        plt2, = plt.plot(10000./self.nu, 1000000*self.Transit_Signal_CIA, label="Molecular+CIA")
+        self.Transit_Signal = self.load_atmosphere_geometry_model()
         
-        plt.legend(handles=[plt1,plt2])
-        plt.show()
-
+        return self.nu, self.Transit_Signal
+        
     def load_astrophysical_properties(self):
         """
         There is going to be more development here in the future
@@ -690,7 +535,6 @@ class TS_Simulator():
                 
         return [normalized_bio_molecule_xsec]
 
-
     def load_atmosphere_geometry_model(self, bio=False, CIA=False, Rayleigh=True, result="Trans"):
         # convert all the toggle into self variables.
 
@@ -830,163 +674,7 @@ class TS_Simulator():
         return Raw_Transit_Signal
 
 
-    def calculate_convolve(self,ydata):
-        #if self.user_input["Observation"]["Convolve"] == "true":
-        amount = float(self.user_input["Observation"]["Convolve_Amount"])
-        nu,Transit_Signal,i1,i2,slit = hp.convolveSpectrum(self.nu,ydata,SlitFunction=hp.SLIT_RECTANGULAR,Resolution=amount,AF_wing=20.0)
-        
-        return nu,Transit_Signal
-    
-    def spectra_window(self, nu, coef, type="A",threshold=200.,span=100.):
-        
-        if type == "A":
-        
-            window = []
-            
-            start = True
-            win = [0,0]
-            
-            self.stuff = []
-            for i,n in enumerate(nu):
-                
-                if coef[i] < threshold and start == True:
-                    win[0] = n
-                    self.stuff.append(n)
-                    start = False
-                if coef[i] > threshold and start == False:
-                    
-                    self.stuff.append(n)
-                    if n>=win[0]+span:
-                        win[1] = n
-                        start = True
-                        window.append(np.array(win))
-                    else:
-                        win[0] = n
-                        start = True
-        
-        elif type == "T":
-            
-            window = []
-            start = True
-            win = [0,0]
-                        
-            Min = self.min_signal
-            Max = max(coef)#self.max_signal
-            if threshold > 1:
-                threshold = 1000/threshold
-            
-            
-            threshold = Min+(Max-Min)*threshold
-            self.threshold = threshold
-            
-            self.stuff = []
-            for i,n in enumerate(nu):
-                
-                if coef[i] < threshold and start == True:
-                    win[0] = n
-                    self.stuff.append(n)
-                    start = False
-                if coef[i] > threshold and start == False:
-                    
-                    self.stuff.append(n)
-                    if n>=win[0]+span:
-                        win[1] = n
-                        start = True
-                        window.append(np.array(win))
-                    else:
-                        win[0] = n
-                        start = True
 
-        if self.user_input["Save"]["Window"]["save"] == "true":
-            with open(os.path.join(self.user_input["Save"]["Window"]["path"],
-                                   self.user_input["Save"]["Window"]["name"]),"w") as f:
-                for i in window:
-                    f.write("%s-%s\n"%(i[0],i[1]))
-        
-        return window
-
-    def plot_result(self,nu,coef):
-        
-        def close_event():
-            plt.close() #timer calls this function after 3 seconds and closes the window 
-        
-        fig = plt.figure(figsize=(16,6))
-        timer = fig.canvas.new_timer(interval = 30000) #creating a timer object and setting an interval of 3000 milliseconds
-        timer.add_callback(close_event)
-
-        
-        #plt.title("Transit Signal and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(self.normalized_molecules))
-        plt.title("Transit Signal and Molecule Detectable Window for Simulated exo-Earth Atmosphere")
-        plt.xlabel(r'Wavelength ($\mu m$)')
-        plt.ylabel("Transit Signal (ppm)")    
-
-
-        ax = plt.gca()
-        ax.set_xscale('log')
-        #ax.set_yscale("log")
-        plt.tick_params(axis='x', which='minor')
-        ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))          
-
-        for k in self.nu_window:
-            up,down = 10000./k[1],10000./k[0]
-            plt.axvspan(up,down,facecolor="k",alpha=0.2)
-
-        #plt.axhline(y=self.threshold*10**6, linewidth=2, color = 'k')
-
-
-        plt.plot(10000./nu, 1000000*coef,color="r")
-        
-        
-        #save_dir  = self.user_input["Save"]["Plot"]["path"]
-        #save_name = self.user_input["Save"]["Plot"]["name"] 
-        
-        #plt.savefig(os.path.join(save_dir,save_name))
-
-        #timer.start()
-        plt.show()
-
-    def analyze_spectra_detection(self,nu,trans,bio_trans,method="max"):
-        """
-        How to implement area under curve?
-        """
-        
-        noise_level = 10
-        comp = 2
-        detection = False
-        Detected = []
-        
-        for i in self.nu_window:
-            detected = False
-            reference =  trans[list(nu).index(i[0]):list(nu).index(i[1])]
-            signal = bio_trans[list(nu).index(i[0]):list(nu).index(i[1])]
-            
-            
-            # above certain ppm
-            difference = max(signal-reference)*10**6
-            # above certain comparision
-            comparison = max((signal-self.min_signal)/(reference-self.min_signal))
-        
-            if difference > 3*noise_level:
-                detection = True
-                detected = True
-            if comparison > comp:
-                detection = True
-                detected = True
-                
-            
-            Detected.append(detected)
-                
-        
-        return detection, Detected
-        
-        
-        
-        
-        
-        
-        
-        
-        
         
         
         

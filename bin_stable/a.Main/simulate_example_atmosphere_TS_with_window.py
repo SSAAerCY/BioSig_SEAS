@@ -16,24 +16,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This simulation aimed towards testing H2 atmospheres with CIA added
-"""
 
+Generate a List of atmospheres and calculate their windows.
+
+Hash is first introduced here for temporary file saving
+
+"""
 import os
 import sys
+
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-import SEAS_Main.simulation.transmission_spectra_simulator as theory
-import SEAS_Main.simulation.observer as obs
+from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 
-import SEAS_Utils as utils
 from SEAS_Utils.common_utils.timer import simple_timer
 import SEAS_Utils.common_utils.configurable as config
-import SEAS_Utils.common_utils.data_plotter as plt
+import SEAS_Main.simulation.transmission_spectra_simulator as theory
+import SEAS_Main.simulation.observed_spectra_simulator as observe
 
-
+from SEAS_Utils.common_utils.timer import simple_timer
 
 
 import matplotlib.pyplot as plt
@@ -41,8 +44,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 ml = MultipleLocator(10)
 
-
-def simulate_CIA(s):
+def simulate_window(s, o):
+    
     
     s.Timer = simple_timer(4)
     
@@ -64,75 +67,66 @@ def simulate_CIA(s):
     # calculate the scale height for each layer of the atmosphere
     s.normalized_scale_height = s.calculate_scale_height()
 
-    s.normalized_molecules, s.MR_Pressure, s.molecule_MR = s.load_mixing_ratio()
-    s.normalized_abundance = s.interpolate_mixing_ratio()
-    
-    # load temperature pressure profile
-    s.TP_Pressure, s.TP_Temperature = s.load_TP_profile()        
-    s.normalized_temperature = s.interpolate_TP_profile()
-
-    # calculate the scale height for each layer of the atmosphere
-    s.normalized_scale_height = s.calculate_scale_height()        
-
+    # load molecular cross section for main constituent of the atmosphere
+    # will check first to see if the molecule is in the database 
     s.cross_db = s.check_molecules()
     s.nu, s.normalized_cross_section = s.load_molecule_cross_section()
     
     s.normalized_rayleigh = s.load_rayleigh_scattering()
+    
+    print "load time", s.Timer.elapse()
 
-    CIA_Enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["CIA"]["enable"])
-    if CIA_Enable == True:
-        s.CIA_File, s.CIA_Data = s.load_CIA(["H2"])
-        s.normalized_CIA = s.interpolate_CIA()
-    
-    s.Transit_Signal_CIA = s.load_atmosphere_geometry_model(CIA=True)
-    
     s.Transit_Signal = s.load_atmosphere_geometry_model()
-    
+    nu,trans = o.calculate_convolve(s.nu, s.Transit_Signal)
+
+    s.nu_window = o.spectra_window(nu,trans,"T",0.3, 100.,s.min_signal)
+    print "calc time", s.Timer.elapse()
+
+    plt.title("Absorption and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(s.normalized_molecules))
+    plt.xlabel(r'Wavelength ($\mu m$)')
+    plt.ylabel("absorption")    
+
     ax = plt.gca()
     ax.set_xscale('log')
-    #ax.set_yscale("log")
     plt.tick_params(axis='x', which='minor')
-    ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))           
-    
+    ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))          
 
-    plt.title("Transit Signal and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(s.normalized_molecules))
-    plt.xlabel(r'Wavelength ($\mu m$)')
-    plt.ylabel("Transit Signal (ppm)")  
+    for k in s.nu_window:
+        up,down = 10000./k[1],10000./k[0]
+        plt.axvspan(up,down,facecolor="k",alpha=0.2)
 
+    plt.plot(10000./nu,trans)
    
-    plt1, = plt.plot(10000./s.nu, 1000000*s.Transit_Signal, label="Molecular")
-    plt2, = plt.plot(10000./s.nu, 1000000*s.Transit_Signal_CIA, label="Molecular+CIA")
-    
-    plt.legend(handles=[plt1,plt2])
     plt.show()
-
-
-
+    
+    
+    return s.Transit_Signal
 
 
 if __name__ == "__main__":
     
-    user_input = config.Configuration("user_input_dev.cfg")
+    
+    Timer = simple_timer()
+    
+    user_input = config.Configuration("../../bin_stable/a.Main/user_input_dev.cfg")
+    
+    Filename = "Test_Earth"
     
     user_input["Simulation_Control"]["DB_DIR"]              = "Simulation_Band"
-    user_input["Simulation_Control"]["DB_Name"]             = None#"cross_sec_simulation.db"
-    user_input["Simulation_Control"]["TP_Profile_Name"]     = "isothermal_300K.txt"
-    user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "H2&He.txt"
+    user_input["Simulation_Control"]["DB_Name"]             = None#"cross_sec_Example.db"
+    user_input["Simulation_Control"]["TP_Profile_Name"]     = "earth.txt"
+    user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "earth.txt"
 
-    user_input["Planet"]["R_Planet"] = 10
-    user_input["Planet"]["M_Planet"] = 300
+    user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "%s_Cross_Section.npy"%Filename
+    user_input["Save"]["Window"]["path"] = "../../output/Simple_Atmosphere_Window"
+    user_input["Save"]["Window"]["name"] = "%s_Window_A1000_S100.txt"%Filename
     
+    user_input["Save"]["Plot"] = {}
+    user_input["Save"]["Plot"]["path"] = "../../output/Plot_Result"
+    user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename
     
-    user_input["Atmosphere_Effects"]["CIA"]["enable"] = "true"
-
-    user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "Temp_H2&He_Cross_Section.npy"
-
     simulation = theory.TS_Simulator(user_input)
+    observer = observe.OS_Simulator(user_input)
     
-    #Raw_TS = simulation.simulate_CIA()
-    
-    Raw_TS = simulate_CIA(simulation)
-    
-    
-    
+    Raw_TS = simulate_window(simulation, observer)         
     

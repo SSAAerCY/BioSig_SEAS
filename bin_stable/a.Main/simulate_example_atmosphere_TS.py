@@ -26,9 +26,14 @@ DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
-import SEAS_Main.simulation.observer as obs
+import SEAS_Main.simulation.observed_spectra_simulator as observe
+
 import SEAS_Utils.common_utils.configurable as config
 import SEAS_Utils.common_utils.data_plotter as plt
+
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+ml = MultipleLocator(10)
 
 
 if __name__ == "__main__":
@@ -43,14 +48,15 @@ if __name__ == "__main__":
 
     user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "Temp_H2O_Cross_Section.npy"
 
-
-
     simulation = theory.TS_Simulator(user_input)
+    observer = observe.OS_Simulator(user_input)
     
-    Raw_TS = simulation.simulate_example()
+    Raw_nu, Raw_TS = simulation.simulate_example()
     
+    nu, Trans = observer.calculate_convolve(Raw_nu, Raw_TS)
     
-    
-    
+    plt.plot(10000./Raw_nu,Raw_TS)
+    plt.plot(10000./nu,Trans)
+    plt.show()
     
     

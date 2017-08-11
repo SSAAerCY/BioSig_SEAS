@@ -29,11 +29,17 @@ import sys
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
+import SEAS_Main.simulation.transmission_spectra_simulator as theory
+import SEAS_Main.simulation.observed_spectra_simulator as observe
 
 from SEAS_Utils.common_utils.timer import simple_timer
+from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 import SEAS_Utils.common_utils.configurable as config
-import SEAS_Main.simulation.transmission_spectra_simulator as theory
+
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+ml = MultipleLocator(10)
+
 
 
 if __name__ == "__main__":
@@ -59,6 +65,15 @@ if __name__ == "__main__":
     user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename
     
     simulation = theory.TS_Simulator(user_input)
+    observer = observe.OS_Simulator(user_input)
     
-    Raw_TS = simulation.simulate_window()         
+    Raw_nu, Raw_TS = simulation.simulate_example()
+    
+    nu, Trans = observer.calculate_convolve(Raw_nu, Raw_TS)
+    
+    plt.plot(10000./Raw_nu,Raw_TS)
+    plt.plot(10000./nu,Trans)
+    plt.show()
+    
+    
     
