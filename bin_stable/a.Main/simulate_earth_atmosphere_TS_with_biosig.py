@@ -26,31 +26,31 @@ import os
 import sys
 import numpy as np
 import random
-import matplotlib.pyplot as plt
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-
-
+import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 ml = MultipleLocator(10)
 
-
-
-import SEAS_Utils as utils
-from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
-
-from SEAS_Utils.common_utils.timer import simple_timer
-import SEAS_Utils.common_utils.configurable as config
-
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
+import SEAS_Main.simulation.spectra_analyzer as analyze
 
-
+import SEAS_Utils as utils
+import SEAS_Utils.common_utils.data_plotter as plotter
+import SEAS_Utils.common_utils.configurable as config
+from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 from SEAS_Utils.common_utils.data_loader import NIST_Smile_List
+from SEAS_Utils.common_utils.timer import simple_timer
 
-def simulate_NIST(s,o):
+
+
+
+
+
+def simulate_NIST(s,o,a):
 
     s.Timer = simple_timer(4)
     
@@ -112,14 +112,16 @@ def simulate_NIST(s,o):
         o_nu, o_xsec = s.load_overlay_effects()
         s.normalized_overlay = s.interpolate_overlay_effects(o_nu,o_xsec)
          
-    # calculate transmission spectra
+    # calculate theoretical transmission spectra
     s.Reference_Transit_Signal = s.load_atmosphere_geometry_model()
     s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable)
     
-    # analyze the spectra
+    # calculate observed transmission spectra
     nu,ref_trans = o.calculate_convolve(s.nu, s.Reference_Transit_Signal)
     nu,bio_trans = o.calculate_convolve(s.nu, s.Bio_Transit_Signal)
-    s.nu_window = o.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
+    
+    # analyze the spectra
+    s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
     
 
     fig = plt.figure(figsize=(16,6))
@@ -192,6 +194,7 @@ if __name__ == "__main__":
 
     simulation = theory.TS_Simulator(user_input)
     observer = observe.OS_Simulator(user_input)
+    analyzer = analyze.Spectra_Analyzer(user_input)
     
-    simulation = simulate_NIST(simulation, observer)         
+    simulation = simulate_NIST(simulation, observer, analyzer)         
     

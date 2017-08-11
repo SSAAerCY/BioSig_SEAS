@@ -25,26 +25,22 @@ Hash is first introduced here for temporary file saving
 import os
 import sys
 
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+ml = MultipleLocator(10)
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
-
-from SEAS_Utils.common_utils.timer import simple_timer
-import SEAS_Utils.common_utils.configurable as config
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
+import SEAS_Main.simulation.spectra_analyzer as analyze
 
+from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 from SEAS_Utils.common_utils.timer import simple_timer
+import SEAS_Utils.common_utils.configurable as config
 
-
-import matplotlib.pyplot as plt
-
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-ml = MultipleLocator(10)
-
-def simulate_window(s, o):
+def simulate_window(s, o, a):
     
     
     s.Timer = simple_timer(4)
@@ -79,7 +75,7 @@ def simulate_window(s, o):
     s.Transit_Signal = s.load_atmosphere_geometry_model()
     nu,trans = o.calculate_convolve(s.nu, s.Transit_Signal)
 
-    s.nu_window = o.spectra_window(nu,trans,"T",0.3, 100.,s.min_signal)
+    s.nu_window = a.spectra_window(nu,trans,"T",0.3, 100.,s.min_signal)
     print "calc time", s.Timer.elapse()
 
     plt.title("Absorption and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(s.normalized_molecules))
@@ -127,6 +123,9 @@ if __name__ == "__main__":
     
     simulation = theory.TS_Simulator(user_input)
     observer = observe.OS_Simulator(user_input)
+    analyzer = analyze.Spectra_Analyzer(user_input)
     
-    Raw_TS = simulate_window(simulation, observer)         
-    
+    Raw_TS = simulate_window(simulation, observer, analyzer)         
+
+
+       

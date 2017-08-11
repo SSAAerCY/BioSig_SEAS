@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
+import SEAS_Main.simulation.spectra_analyzer as analyze
 
 import SEAS_Utils.common_utils.configurable as config
 import SEAS_Utils.common_utils.data_plotter as plt
@@ -50,10 +51,13 @@ if __name__ == "__main__":
 
     simulation = theory.TS_Simulator(user_input)
     observer = observe.OS_Simulator(user_input)
+    analyzer = analyze.Spectra_Analyzer(user_input)
     
     Raw_nu, Raw_TS = simulation.simulate_example()
     
     nu, Trans = observer.calculate_convolve(Raw_nu, Raw_TS)
+    
+    
     
     plt.plot(10000./Raw_nu,Raw_TS)
     plt.plot(10000./nu,Trans)

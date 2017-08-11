@@ -487,7 +487,14 @@ class TS_Simulator():
             
             
             return nu, normalized_bio_molecule_xsec
-                     
+
+    def load_cloud_molecule_cross_section(self, cloud_molecule, data_type=""):
+        """
+        Treating cloud and haze as the same for now.
+        cloud species are important
+        """
+        pass
+         
     def update_mixing_ratio(self):
         pass
 
@@ -673,8 +680,8 @@ class TS_Simulator():
         
         return Raw_Transit_Signal
 
-
-
+    def load_atmosphere_geometry_model_with_cloud(self, bio=False, CIA=False, Rayleigh=True, result="Trans"):
+        pass
         
         
         
