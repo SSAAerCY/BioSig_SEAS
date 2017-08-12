@@ -29,17 +29,9 @@ import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observer as obs
 
 import SEAS_Utils as utils
-from SEAS_Utils.common_utils.timer import simple_timer
 import SEAS_Utils.common_utils.configurable as config
-import SEAS_Utils.common_utils.data_plotter as plt
-
-
-
-
-import matplotlib.pyplot as plt
-
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-ml = MultipleLocator(10)
+import SEAS_Utils.common_utils.data_plotter as plotter
+from SEAS_Utils.common_utils.timer import simple_timer
 
 
 def simulate_CIA(s):
@@ -85,28 +77,20 @@ def simulate_CIA(s):
         s.normalized_CIA = s.interpolate_CIA()
     
     s.Transit_Signal_CIA = s.load_atmosphere_geometry_model(CIA=True)
-    
     s.Transit_Signal = s.load_atmosphere_geometry_model()
     
-    ax = plt.gca()
-    ax.set_xscale('log')
-    #ax.set_yscale("log")
-    plt.tick_params(axis='x', which='minor')
-    ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))           
     
-
-    plt.title("Transit Signal and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(s.normalized_molecules))
-    plt.xlabel(r'Wavelength ($\mu m$)')
-    plt.ylabel("Transit Signal (ppm)")  
-
-   
-    plt1, = plt.plot(10000./s.nu, 1000000*s.Transit_Signal, label="Molecular")
-    plt2, = plt.plot(10000./s.nu, 1000000*s.Transit_Signal_CIA, label="Molecular+CIA")
+    user_input["Plotting"]["Figure"]["Title"]   = r"Transit Signal and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(s.normalized_molecules)
+    user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
+    user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
     
-    plt.legend(handles=[plt1,plt2])
-    plt.show()
-
-
+    sim_plot = plotter.Simulation_Plotter(s.user_input)
+    
+    plt_ref_1 = sim_plot.plot_xy(s.nu,s.Transit_Signal,"Molecular")
+    plt_ref_2 = sim_plot.plot_xy(s.nu,s.Transit_Signal_CIA,"Molecular+CIA")
+    
+    sim_plot.set_legend([plt_ref_1, plt_ref_2])
+    sim_plot.show_plot()
 
 
 

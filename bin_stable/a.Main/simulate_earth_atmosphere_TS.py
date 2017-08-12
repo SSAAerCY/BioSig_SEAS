@@ -25,10 +25,6 @@ Hash is first introduced here for temporary file saving
 import os
 import sys
 
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-ml = MultipleLocator(10)
-
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
@@ -36,11 +32,11 @@ import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
 import SEAS_Main.simulation.spectra_analyzer as analyze
 
+import SEAS_Utils as utils
+import SEAS_Utils.common_utils.configurable as config
+import SEAS_Utils.common_utils.data_plotter as plotter
 from SEAS_Utils.common_utils.timer import simple_timer
 from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
-import SEAS_Utils.common_utils.configurable as config
-
-
 
 
 
@@ -70,12 +66,16 @@ if __name__ == "__main__":
     observer = observe.OS_Simulator(user_input)
     
     Raw_nu, Raw_TS = simulation.simulate_example()
-    
     nu, Trans = observer.calculate_convolve(Raw_nu, Raw_TS)
+
+    user_input["Plotting"]["Figure"]["Title"] = "Transit Signal for Simulated Earth Atmosphere"
+    user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
+    user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
     
-    plt.plot(10000./Raw_nu,Raw_TS)
-    plt.plot(10000./nu,Trans)
-    plt.show()
+    sim_plot = plotter.Simulation_Plotter(user_input)
     
-    
+    plt_ref_1 = sim_plot.plot_xy(Raw_nu,Raw_TS,"raw_spectra")
+    plt_ref_2 = sim_plot.plot_xy(nu,Trans,"convolved_spectra")
+    sim_plot.set_legend([plt_ref_1, plt_ref_2])
+    sim_plot.show_plot()    
     

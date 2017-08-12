@@ -30,10 +30,6 @@ import random
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-ml = MultipleLocator(10)
-
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
 import SEAS_Main.simulation.spectra_analyzer as analyze
@@ -44,10 +40,6 @@ import SEAS_Utils.common_utils.configurable as config
 from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 from SEAS_Utils.common_utils.data_loader import NIST_Smile_List
 from SEAS_Utils.common_utils.timer import simple_timer
-
-
-
-
 
 
 def simulate_NIST(s,o,a):
@@ -123,35 +115,24 @@ def simulate_NIST(s,o,a):
     # analyze the spectra
     s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
     
-
-    fig = plt.figure(figsize=(16,6))
-    ax = plt.gca()
-    ax.set_xscale('log')
-    plt.tick_params(axis='x', which='minor')
-    ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))           
     
-
-    plt.title("Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of %s at %s ppm"%(bio_molecule,bio_abundance*10**6))
-    plt.xlabel(r'Wavelength ($\mu m$)')
-    plt.ylabel("Transit Signal (ppm)")  
+    user_input["Plotting"]["Figure"]["Title"] = "Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of %s at %s ppm"%(bio_molecule,bio_abundance*10**6)
+    user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
+    user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
     
-    plt1, = plt.plot(10000./nu,bio_trans*10**6, label="with_bio")
-    plt2, = plt.plot(10000./nu,ref_trans*10**6, label="ref.")
-
-    for k in s.nu_window:
-        up,down = 10000./k[1],10000./k[0]
-        plt.axvspan(up,down,facecolor="k",alpha=0.2)
-
+    sim_plot = plotter.Simulation_Plotter(s.user_input)
     
-    plt.legend(handles=[plt1,plt2])
+    plt_ref_1 = sim_plot.plot_xy(nu,bio_trans,"with_bio")
+    plt_ref_2 = sim_plot.plot_xy(nu,ref_trans,"ref.")
+    
+    sim_plot.plot_window(s.nu_window,"k", 0.2)
+    sim_plot.set_legend([plt_ref_1, plt_ref_2])
     
     if utils.to_bool(user_input["Save"]["Plot"]["save"]):
-        save_dir  = s.user_input["Save"]["Plot"]["path"]
-        save_name = s.user_input["Save"]["Plot"]["name"] 
-        plt.savefig(os.path.join(save_dir,save_name))
-    else:    
-        plt.show()
-
+        sim_plot.save_plot()
+    else:
+        sim_plot.show_plot()
+    
     return s
 
 
@@ -175,9 +156,7 @@ if __name__ == "__main__":
     user_input["Save"]["Window"]["name"] = "%s_Window_A1000_S100.txt"%Filename1
     
     molecule_smiles, inchikeys = NIST_Smile_List()
-    
     Bio_Molecule = random.choice(molecule_smiles)
-    
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = Bio_Molecule
@@ -191,10 +170,9 @@ if __name__ == "__main__":
     user_input["Save"]["Plot"]["path"] = "../../output/Plot_Result"
     user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename1
     
-
     simulation = theory.TS_Simulator(user_input)
-    observer = observe.OS_Simulator(user_input)
-    analyzer = analyze.Spectra_Analyzer(user_input)
+    observer   = observe.OS_Simulator(user_input)
+    analyzer   = analyze.Spectra_Analyzer(user_input)
     
     simulation = simulate_NIST(simulation, observer, analyzer)         
     

@@ -25,10 +25,6 @@ Hash is first introduced here for temporary file saving
 import os
 import sys
 
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-ml = MultipleLocator(10)
-
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
@@ -36,9 +32,11 @@ import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
 import SEAS_Main.simulation.spectra_analyzer as analyze
 
+import SEAS_Utils as utils
+import SEAS_Utils.common_utils.configurable as config
+import SEAS_Utils.common_utils.data_plotter as plotter
 from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 from SEAS_Utils.common_utils.timer import simple_timer
-import SEAS_Utils.common_utils.configurable as config
 
 def simulate_window(s, o, a):
     
@@ -78,23 +76,14 @@ def simulate_window(s, o, a):
     s.nu_window = a.spectra_window(nu,trans,"T",0.3, 100.,s.min_signal)
     print "calc time", s.Timer.elapse()
 
-    plt.title("Absorption and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(s.normalized_molecules))
-    plt.xlabel(r'Wavelength ($\mu m$)')
-    plt.ylabel("absorption")    
-
-    ax = plt.gca()
-    ax.set_xscale('log')
-    plt.tick_params(axis='x', which='minor')
-    ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))          
-
-    for k in s.nu_window:
-        up,down = 10000./k[1],10000./k[0]
-        plt.axvspan(up,down,facecolor="k",alpha=0.2)
-
-    plt.plot(10000./nu,trans)
-   
-    plt.show()
+    user_input["Plotting"]["Figure"]["Title"] = "Absorption and Atmospheric Window for Simulated Atmosphere of %s"%"_".join(s.normalized_molecules)
+    user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
+    user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
     
+    sim_plot = plotter.Simulation_Plotter(s.user_input)
+    sim_plot.plot_xy(nu,trans)
+    sim_plot.plot_window(s.nu_window,"k", 0.2)
+    sim_plot.show_plot()
     
     return s.Transit_Signal
 

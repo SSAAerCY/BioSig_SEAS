@@ -29,12 +29,11 @@ import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
 import SEAS_Main.simulation.spectra_analyzer as analyze
 
+import SEAS_Utils as utils
 import SEAS_Utils.common_utils.configurable as config
-import SEAS_Utils.common_utils.data_plotter as plt
+import SEAS_Utils.common_utils.data_plotter as plotter
 
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-ml = MultipleLocator(10)
+
 
 
 if __name__ == "__main__":
@@ -57,10 +56,13 @@ if __name__ == "__main__":
     
     nu, Trans = observer.calculate_convolve(Raw_nu, Raw_TS)
     
+    user_input["Plotting"]["Figure"]["Title"] = "Transit Signal for Simulated Earth Atmosphere"
+    user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
+    user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
     
-    
-    plt.plot(10000./Raw_nu,Raw_TS)
-    plt.plot(10000./nu,Trans)
-    plt.show()
-    
-    
+    sim_plot = plotter.Simulation_Plotter(user_input)
+    plt_ref_1 = sim_plot.plot_xy(Raw_nu,Raw_TS,"raw_spectra")
+    plt_ref_2 = sim_plot.plot_xy(nu,Trans,"convolved_spectra")
+    sim_plot.set_legend([plt_ref_1, plt_ref_2])
+    sim_plot.show_plot()    
+        

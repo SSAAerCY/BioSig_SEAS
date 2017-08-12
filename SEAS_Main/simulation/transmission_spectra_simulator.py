@@ -128,6 +128,7 @@ class TS_Simulator():
         self.M_planet        = float(self.user_input["Planet"]["M_Planet"])*M_Earth
         
         Surface_g = calc.calc_SurfaceG(self.M_planet, self.R_planet)
+
         Base_TS_Value   = (self.R_planet/self.R_Star)**2
         
         return Surface_g, Base_TS_Value
@@ -576,9 +577,9 @@ class TS_Simulator():
         if self.Overlay_enable:
             normalized_overlay = self.normalized_overlay
 
-
         Total_Tau = np.zeros(len(self.nu))
-        Total_Transit_Signal = np.ones(len(self.nu))*self.Base_TS_Value
+        Offset = float(self.user_input["Atmosphere_Effects"]["Base_Line"]["offset"])
+        Total_Transit_Signal = np.ones(len(self.nu))*(self.Base_TS_Value+Offset)
         base_layer = self.R_planet
         
         for i in range(TotalBeams):
