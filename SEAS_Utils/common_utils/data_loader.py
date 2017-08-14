@@ -83,6 +83,19 @@ def json_loader(path):
 
     return data
 
+def load_npy(savepath, savename):
+    
+    if ".npy" in savename:
+        save = os.path.join(savepath, savename)
+    else:
+        save = os.path.join(savepath, savename)+".npy"
+        
+
+    if check_file_exist(save):
+        return np.load(save)
+    else:
+        print "File %s Does not exist"%save
+        return []
 
 
 def molecule_cross_section_loader(inputs, cross_db, molecule):

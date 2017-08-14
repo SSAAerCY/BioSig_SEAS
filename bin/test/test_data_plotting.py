@@ -29,7 +29,7 @@ DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import SEAS_Utils.common_utils.data_plotter as plotter
-
+import SEAS_Utils.common_utils.configurable as config
 
 
 if __name__ == "__main__":
@@ -38,14 +38,20 @@ if __name__ == "__main__":
     x = [1,2,3]
     y = [2,4,5]
     
-    inputs = 
+    user_input = config.Configuration("../../bin_stable/a.Main/user_input_dev.cfg")
     
-    Title = "Testing Plot"
-    
-    
-    
-    Plotter = plotter.Plotter(x,y,inputs)
+    user_input["Plotting"]["Figure"]["Title"] = "Testing Plot"
 
+
+    plotter = plotter.Simulation_Plotter(user_input)
+    
+    
+    plt_ref = plotter.plot_xy(x,y)
+    
+    plotter.set_legend([plt_ref])
+    
+    
+    plotter.show_plot()
 
 
 

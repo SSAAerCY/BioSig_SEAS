@@ -38,7 +38,6 @@ ml = MultipleLocator(10)
 
 import SEAS_Main.atmosphere_geometry
 import SEAS_Main.atmosphere_property
-import SEAS_Main.analysis
 from SEAS_Main.atmosphere_effects.biosig_molecule import load_NIST_spectra, biosig_interpolate
 
 from SEAS_Aux.calculation.interpolation import interpolate1d
@@ -376,7 +375,6 @@ class TS_Simulator():
             
             np.save(savename, [nu,normalized_cross_section])
             print "\nInterpolated Cross Section Saved!"
-        
         
         
         return nu, normalized_cross_section

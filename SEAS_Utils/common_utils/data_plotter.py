@@ -28,6 +28,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+
+from matplotlib import ticker
 ml = MultipleLocator(10)
 
 DIR = os.path.abspath(os.path.dirname(__file__))
@@ -99,9 +101,11 @@ class Simulation_Plotter():
         
         self.fig = plt.figure(figsize=(fig_w, fig_h))
         self.ax = plt.gca()
+        self.ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))
+
         
-        plt.tick_params(axis='x', which='minor')
-        self.ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))   
+        xticks = ticker.MaxNLocator(10)
+        self.ax.xaxis.set_major_locator(xticks)  
         
         self.x_unit  = self.user_input["Plotting"]["Figure"]["x_unit"]
         self.x_scale = self.user_input["Plotting"]["Figure"]["x_scale"]
@@ -116,19 +120,29 @@ class Simulation_Plotter():
         self.Title   = self.user_input["Plotting"]["Figure"]["Title"]
         
         self.set_scale()
-        
+        plt.tick_params(axis='x', which='minor')
         plt.xlabel(self.x_label)
         plt.ylabel(self.y_label)
         plt.title(self.Title)
         
-    def plot_xy(self, x, y, Label="Data", Color = ""):
-        
-        if self.x_unit == "um":
-            x = 10000./np.array(x)
-        elif self.x_unit == "nm":
-            x = 10000000./np.array(x)
-        else:
-            x = np.array(x)
+    def plot_xy(self, x, y, Label="Data", Color = "", Dtype="wn"):
+        """
+        assuming input is in wn... otherwise is um
+        """
+        if Dtype == "wn":
+            if self.x_unit == "um":
+                x = 10000./np.array(x)
+            elif self.x_unit == "nm":
+                x = 10000000./np.array(x)
+            else:
+                x = np.array(x)
+        elif Dtype == "um":
+            if self.x_unit == "wn":
+                x = 10000./np.array(x)
+            elif self.x_unit == "nm":
+                x = np.array(x)*1000
+            else:
+                x = np.array(x)            
         
         y = np.array(y)
     
@@ -138,7 +152,7 @@ class Simulation_Plotter():
             plt_ref, = plt.plot(x*self.x_multi,y*self.y_multi,label=Label,color=Color)
 
         return plt_ref
-    
+  
     def plot_xy_list(self, xlist, ylist, ):
         pass
     
@@ -153,6 +167,17 @@ class Simulation_Plotter():
                 up,down = k[0],k[1]
             
             plt.axvspan(up,down,facecolor=Color,alpha=Alpha)
+
+    def plot_bin(self,bin_centers, error_I, error_bar):
+        
+        
+        
+        plt.errorbar(bin_centers, error_I*self.y_multi, xerr=0, yerr=error_bar*self.y_multi, fmt='o',linewidth=2.0)
+
+    def plot_SNR(self, bin_center, SNR):
+        
+        plt.plot(bin_center, SNR, ".")
+        
         
     def plot_line(self):
         pass

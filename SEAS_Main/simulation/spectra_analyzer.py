@@ -40,7 +40,9 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 ml = MultipleLocator(10)
 
 import SEAS_Aux.cross_section.hapi as hp
-import SEAS_Main.observation_effects.observation_noise as noise
+import SEAS_Main.simulation.noise as noise
+
+from PyAstronomy import pyasl
 
 
 class Spectra_Analyzer():
@@ -152,8 +154,28 @@ class Spectra_Analyzer():
         
         return detection, Detected
         
+    def spectra_SNR(self, X, Signal_Diff):
+        
+        # need documentation on what exactly the 20 and deg mean
+        
+        
+        snrEsti = pyasl.estimateSNR(X, Signal_Diff, 20, deg=1, controlPlot=False)
+        
+        dlen = len(snrEsti['snrs'])
+        # this is still undesired... but... 
+        if dlen%3 == 0:
+            x = np.concatenate([np.linspace(400,2000,num=len(snrEsti['snrs'])/3),
+                       np.linspace(2000,10000,num=len(snrEsti['snrs'])/3),
+                       np.linspace(10000,30000,num=len(snrEsti['snrs'])/3)])
+        elif dlen%3 == 1:
+            x = np.concatenate([np.linspace(400,2000,num=len(snrEsti['snrs'])/3),
+                       np.linspace(2000,10000,num=(len(snrEsti['snrs'])/3+1)),
+                       np.linspace(10000,30000,num=len(snrEsti['snrs'])/3)])        
+        elif dlen%3 == 2:
+            x = np.concatenate([np.linspace(400,2000,num=(len(snrEsti['snrs'])/3+1)),
+                       np.linspace(2000,10000,num=len(snrEsti['snrs'])/3),
+                       np.linspace(10000,30000,num=(len(snrEsti['snrs'])/3+1))])        
+        
+        return x, np.array(snrEsti['snrs'])
 
-
-
-
-
+    

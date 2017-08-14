@@ -26,28 +26,80 @@ def convolve_spectra():
     pass
 
 
+
+
+def simple_noise():
+    
+    
+    pass
+
+
+
+
 class Noise():
     
     def __init__(self):
         pass
     
+    def get_noise(self):
+        pass
+    
     
 class Poisson_Noise(Noise):
     
-    def __init__(self):
-        pass    
+    def __init__(self, poisson, shape):
+        
+        poissonNoise = np.random.poisson(poisson, shape).astype(float)
     
+        return poissonNoise
+    
+class Shot_Noise(Poisson_Noise):
+    """
+    shot noise is most frequently observed with small currents or low light intensities that have been amplified.
+    
+    SNR = sqrt(N), where N is average number of event
+    
+    """    
+    def __init__(self):
+        pass
+        
+    
+
 
 class Gaussian_Noise(Noise):
 
-    def __init__(self):
-        pass
+    def __init__(self, multiplier=1, length=10):
+    
+        self.length = length
+        self.multiplier = multiplier
+    
+    def get_noise(self):
+        return np.random.randn(self.length)*self.multiplier
+        
+        """
+        mu, sigma = 8560, 20 # mean and standard deviation
+        s = np.random.normal(mu, sigma, 1000)
+        
+        import matplotlib.pyplot as plt
+        count, bins, ignored = plt.hist(s, 250, normed=True)
+        print count, bins
+        
+        
+        func = 1/(sigma * np.sqrt(2 * np.pi)) *np.exp( - (bins - mu)**2 / (2 * sigma**2) )
+        
+        plt.plot(bins, func, linewidth=2, color='r')
+        plt.show()
+        """
+        
+
     
     
 class Uniform_Noise(Noise):
 
     def __init__(self):
-        pass
+        
+        
+        return np.random.random()
     
     
 class Laplace_Noise(Noise):
@@ -62,9 +114,23 @@ class Lorentz_Noise(Noise):
         pass
 
 
+class Perlin_Noise(Noise):
+    """
+    reference https://pypi.python.org/pypi/noise/
+    """
+    
+    def __init__(self):
+        pass
+
+
+
 class Telescope_Noise(Noise):
 
     def __init__(self):
+        pass
+
+
+    def add_jitter(self):
         pass
 
 

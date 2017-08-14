@@ -24,6 +24,7 @@ Code related to saving generated intermediate data
 
 import os,sys
 import shutil
+import numpy as np
 
 
 def check_file_exist(file_path):
@@ -54,6 +55,17 @@ def check_path_exist(save_path, create=True, overwrite=False):
         else:
             print "path not created"        
         return False
+    
+    
+def save_npy(savepath, savename, data):
+    
+    check_path_exist(savepath)
+    save = os.path.join(savepath, savename)
+
+    np.save(save, data)
+    
+    
+    
     
     
     
