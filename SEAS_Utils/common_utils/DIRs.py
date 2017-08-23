@@ -41,6 +41,7 @@ Molecule_Absorption = os.path.join(Data_DIR,"absorption_data")
 HITRAN_CIA   = os.path.join(Molecule_Absorption,"HITRAN_CIA")
 HITRAN_Lines = os.path.join(Molecule_Absorption,"HITRAN_Line_List")
 NIST_Spectra = os.path.join(Molecule_Absorption,"NIST_Spectra")
+Exomol_Xsec  = os.path.join(Molecule_Absorption,"Exomol_Cross_Section")
 HITRAN_Water_Lines = os.path.join(HITRAN_Lines, "H2O")
 HITRAN_Molecule_List = os.path.join(HITRAN_Lines, "HITRAN_Molecule_List.txt")
 
@@ -54,7 +55,7 @@ DB_DIR = os.path.join(Data_DIR,"database")
 Example_DB    = os.path.join(DB_DIR,"Example")
 Demo_DB       = os.path.join(DB_DIR,"Demo")
 Simulation_DB = os.path.join(DB_DIR,"Simulation_Band")
-
+Exomol_DB     = os.path.join(DB_DIR,"Exomol")
 
 molecule_info = os.path.join(Data_DIR, "molecule_info")
 

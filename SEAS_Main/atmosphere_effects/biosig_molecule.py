@@ -87,7 +87,7 @@ def find_nearest(array,value):
     else:
         return idx#array[idx]
 
-def biosig_interpolate(x1,y1,x2, type):
+def biosig_interpolate(x1,y1,x2, Type):
 
     x1min = min(x1)
     x1max = max(x1)
@@ -96,17 +96,17 @@ def biosig_interpolate(x1,y1,x2, type):
 
 
     f = interpolate.interp1d(x1, y1)
-
-
+    
     if x1min > x2min and x1max < x2max:
         #print "A"
+        
         left = find_nearest(x2,min(x1))+1
         right = find_nearest(x2,max(x1))
     
-        if type == "A" or type == "C":
+        if Type == "A" or Type == "C":
             yinterp_left = np.zeros(left)
             yinterp_right = np.zeros(len(x2)-right)
-        elif type == "T":
+        elif Type == "T":
             yinterp_left = np.ones(left)
             yinterp_right = np.ones(len(x2)-right)
         yinterp_middle = f(x2[left:right])
@@ -116,9 +116,9 @@ def biosig_interpolate(x1,y1,x2, type):
         #print "B"
         right = find_nearest(x2,max(x1))
         
-        if type == "A" or type == "C":
+        if Type == "A" or Type == "C":
             yinterp_right = np.zeros(len(x2)-right)
-        elif type == "T":
+        elif Type == "T":
             yinterp_right = np.ones(len(x2)-right)
         yinterp_middle = f(x2[:right])
         yinterp = np.concatenate([yinterp_middle, yinterp_right])
@@ -127,9 +127,9 @@ def biosig_interpolate(x1,y1,x2, type):
         #print "C"
         left = find_nearest(x2,min(x1))+1
     
-        if type == "A" or type == "C":
+        if Type == "A" or Type == "C":
             yinterp_left = np.zeros(left)
-        elif type == "T":
+        elif Type == "T":
             yinterp_left = np.ones(left)
         yinterp_middle = f(x2[left:])
         

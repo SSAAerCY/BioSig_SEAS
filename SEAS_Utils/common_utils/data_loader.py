@@ -29,11 +29,17 @@ import os
 import sys
 import json
 import numpy as np
-import SEAS_Utils.common_utils.db_management2 as dbm
 from openpyxl import load_workbook, Workbook
 
-from data_saver import check_path_exist, check_file_exist
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
+import SEAS_Utils.common_utils.db_management2 as dbm
 import SEAS_Utils.common_utils.jdx_Reader as jdx
+
+from SEAS_Utils.common_utils.data_saver import check_path_exist, check_file_exist
+from SEAS_Main.atmosphere_effects.biosig_molecule import biosig_interpolate
+
 
 def two_column_file_loader(path,spliter=None,type="float",skip=0):
     """
@@ -113,8 +119,8 @@ def molecule_cross_section_loader(inputs, cross_db, molecule):
     for i,T in enumerate(Tgrid):
         for j,P in enumerate(Pgrid):
             
-            
-            result = cross_db.c.execute("SELECT nu, coef FROM {} WHERE P={} AND T={} AND nu>={} AND nu<{} ORDER BY nu".format(molecule,P,T,numin,numax))
+            print molecule,P,T,numin,numax
+            result = cross_db.c.execute("SELECT nu, coef FROM {} WHERE P={} AND T={} AND nu>={} AND nu<={} ORDER BY nu".format(molecule,P,T,numin,numax))
             fetch = np.array(result.fetchall()).T
             data[i][j] = fetch[1]
             
@@ -130,8 +136,6 @@ def molecule_cross_section_loader2(inputs, db_dir, molecule):
 
     T_grid = inputs["Simulation_Control"]["T_Grid"]
     P_grid = inputs["Simulation_Control"]["P_Grid"]
-    numin = inputs["Spectra"]["Numin"]
-    numax = inputs["Spectra"]["Numax"]
 
     kwargs = {"dir"        :db_dir,
               "db_name"    :"cross_section_Simulation_%s.db"%molecule,
@@ -140,8 +144,6 @@ def molecule_cross_section_loader2(inputs, db_dir, molecule):
               "REMOVE"     :True,
               "BACKUP"     :False,
               "OVERWRITE"  :True}
-    
-    
     
     cross_db = dbm.database(**kwargs)  
     cross_db.access_db()  
@@ -157,6 +159,41 @@ def molecule_cross_section_loader2(inputs, db_dir, molecule):
     nu = fetch[0]
 
     
+    return nu, data
+
+def exomol_cross_section_loader(inputs, nu, Exomol_DB_DIR, molecule):
+    
+    
+
+    T_grid = inputs["Simulation_Control"]["T_Grid"]
+    P_grid = inputs["Simulation_Control"]["P_Grid"]
+
+
+    kwargs = {"dir"        :Exomol_DB_DIR,
+              "db_name"    :"Exomol_%s.db"%molecule,
+              "user"       :"azariven",
+              "DEBUG"      :False,
+              "REMOVE"     :True,
+              "BACKUP"     :False,
+              "OVERWRITE"  :True}
+    
+    cross_db = dbm.database(**kwargs)  
+    cross_db.access_db()  
+
+
+    data = [[0 for y in range(len(T_grid))] for x in range(len(P_grid))]
+    for j,P in enumerate(P_grid):
+        for i,T in enumerate(T_grid):
+            table_name = "T%sP%s"%(i,j)
+            result = cross_db.c.execute("SELECT * FROM {} ORDER BY nu".format(table_name))
+            fetch = np.array(result.fetchall()).T
+
+            x1 = np.array(fetch[0],dtype="float")
+            y1 = np.array(fetch[1],dtype="float")
+
+            y2 = biosig_interpolate(x1,y1,nu,"C")
+            data[j][i] = y2
+
     return nu, data
 
 

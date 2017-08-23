@@ -47,7 +47,7 @@ import SEAS_Aux.cross_section.hapi as hp
 from SEAS_Utils.common_utils.constants import *
 from SEAS_Utils.common_utils.timer import simple_timer
 from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, molecule_info, DB_DIR,Intermediate_DIR, HITRAN_CIA
-from SEAS_Utils.common_utils.data_loader import two_column_file_loader,multi_column_file_loader, json_loader, molecule_cross_section_loader2
+from SEAS_Utils.common_utils.data_loader import *
 from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 import SEAS_Utils.common_utils.db_management2 as dbm
 
@@ -72,6 +72,7 @@ class TS_Simulator():
         self.user_input = user_input
         
         self.DB_DIR = os.path.join(DB_DIR,self.user_input["Simulation_Control"]["DB_DIR"])
+        self.Exomol_DB_DIR = os.path.join(DB_DIR,self.user_input["Simulation_Control"]["Exomol_DB_DIR"])
         
         self.T_grid = [float(x) for x in user_input["Simulation_Control"]["T_Grid"]]
         self.P_grid = [float(x) for x in user_input["Simulation_Control"]["P_Grid"]]
@@ -320,6 +321,8 @@ class TS_Simulator():
         """
         a smarter interpolation is needed here 
         a smarter saver is needed too with dynamic filename
+        
+        
         """
     
         normalized_temperature = self.normalized_temperature
@@ -376,13 +379,13 @@ class TS_Simulator():
             np.save(savename, [nu,normalized_cross_section])
             print "\nInterpolated Cross Section Saved!"
         
-        
         return nu, normalized_cross_section
 
     def load_bio_molecule_cross_section(self, bio_molecule, data_type):
         """
         currently constrained to one molecule
         """
+        
         
         normalized_bio_molecule_xsec = []
         
@@ -487,6 +490,54 @@ class TS_Simulator():
             
             return nu, normalized_bio_molecule_xsec
 
+        elif data_type == "Exomol":
+            # need to check if molecule is in database
+            
+            if self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_saved"] == "true":
+                savepath = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savepath"])
+                savename = os.path.join(savepath,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savename"])
+                if check_file_exist(savename):
+                    print "Bio Cross Section Loaded from Save"
+                    return np.load(savename)      
+            
+            nu, raw_cross_section_grid = exomol_cross_section_loader(self.user_input, self.nu, self.Exomol_DB_DIR, bio_molecule)
+
+            print "load:%s"%self.Timer.elapse(),
+            processed_cross_section = []
+            for layer_cross_section in raw_cross_section_grid:
+                
+                raw_cross_section_by_wn = np.array(layer_cross_section).T
+                pro_cross_section_by_wn = []
+
+                x = self.T_grid
+                X = self.normalized_temperature           
+                for y in raw_cross_section_by_wn:
+                    pro_cross_section_by_wn.append(interpolate1d(x,y,X))
+
+                # something is definately wrong here with saving too much data. we don't need a 24x24 grid. just 24x2
+                # also no need to interpolate if isothermal atmosphere
+                processed_cross_section.append(np.array(pro_cross_section_by_wn).T)
+
+            normalized_bio_molecule_xsec.append(processed_cross_section)
+            print "inte:%s"%self.Timer.elapse()
+            
+            
+            if self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_saved"] == "true":
+                
+                savepath = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savepath"])
+                check_path_exist(savepath)
+                savename = os.path.join(savepath,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savename"])           
+                
+                np.save(savename, [nu,normalized_bio_molecule_xsec])
+                print "\nInterpolated Bio Cross Section Saved!"            
+            
+            
+            return nu, normalized_bio_molecule_xsec
+  
+        
+
+
+
     def load_cloud_molecule_cross_section(self, cloud_molecule, data_type=""):
         """
         Treating cloud and haze as the same for now.
@@ -497,33 +548,41 @@ class TS_Simulator():
     def update_mixing_ratio(self):
         pass
 
-    def load_overlay_effects(self):
+    def load_overlay_effects(self, filename="", dtype="HITRAN"):
         """
         effects that are not officially included and still under test
         
         """
-        filename = "../../input/absorption_data/HITRAN_Cross_Section/O3/O3_300.0_0.0_29164.0-40798.0_04.xsc"
-        nu,coef = [],[]
-        with open(filename,"r") as f:
-            result = f.read().split("\n")
-            for i in result[1:]:
-                if i != "":
-                    for j in i.split():
-                        coef.append(j)
-            
-            numin = 29164.
-            numax = 40798.
-            
-            wavmin = 10000./numax
-            wavmax = 10000./numin
-            
-            npts = 5818
-            
-            wav = np.linspace(wavmin,wavmax,npts)
-            
-            nu = 10000./wav[::-1]
-            
-        return nu,coef  
+        
+        if dtype == "HITRAN":
+            filename = "../../input/absorption_data/HITRAN_Cross_Section/O3/O3_300.0_0.0_29164.0-40798.0_04.xsc"
+            nu,coef = [],[]
+            with open(filename,"r") as f:
+                result = f.read().split("\n")
+                for i in result[1:]:
+                    if i != "":
+                        for j in i.split():
+                            coef.append(j)
+                
+                numin = 29164.
+                numax = 40798.
+                
+                wavmin = 10000./numax
+                wavmax = 10000./numin
+                
+                npts = 5818
+                
+                wav = np.linspace(wavmin,wavmax,npts)
+                
+                nu = 10000./wav[::-1]
+                
+            return nu,coef  
+        elif dtype == "Exomol":
+            from SEAS_Utils.common_utils.DIRs import Exomol_Xsec
+            ph3_data = Exomol_Xsec+"/31P-1H3/31P-1H3_400-9999_300K_1.000000.sigma"
+            nu, xsec = two_column_file_loader(ph3_data)
+            return nu, xsec
+    
     
     def interpolate_overlay_effects(self,x1,y1):
         

@@ -57,7 +57,7 @@ def check_path_exist(save_path, create=True, overwrite=False):
         return False
     
     
-def save_npy(savepath, savename, data):
+def save_npy(savepath, savename, data, overwrite=True):
     
     check_path_exist(savepath)
     save = os.path.join(savepath, savename)
@@ -65,8 +65,54 @@ def save_npy(savepath, savename, data):
     np.save(save, data)
     
     
+def save_excel(savepath, savename, data, overwrite=True):
+    
+    check_path_exist(savepath)
+    save = os.path.join(savepath, savename)    
+
+
+
+class Saver():
     
     
+    def __init__(self, savepath, savename, data, overwrite=True):
+        """
+        overwrite should be on the file level
+        """
+        
+        self.savepath = savepath
+        self.savename = savename
+        self.data = data
+        self.overwrite = overwrite
+        
+        self.save = os.path.join(savepath, savename)
     
     
+        self.check_data()
+    
+    def check_data(self):
+        pass
+    
+
+    def check_file_exist(self):
+    
+        return os.path.isfile(self.save)
+    
+    def to_text(self):
+        
+        pass
+    
+    def to_npy(self):
+        
+        np.save(self.save, self.data)
+
+    def to_excel(self):
+        
+        from openpyxl import Workbook, load_workbook
+        
+        pass
+
+
+
+
     

@@ -46,6 +46,12 @@ class Plotter():
     
     def __init__(self):
         pass
+    
+    
+    def plot_xy(self, x, y):
+        
+        plt.plot(x,y)
+        plt.show()
 
 
 class Simulation_Plotter():
