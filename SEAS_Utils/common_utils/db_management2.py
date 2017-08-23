@@ -266,9 +266,6 @@ class database():
             raise Exception("No matching primary key, table not created")
             return
         
-        
-          
-        
         self.c.execute(command)
         self.conn.commit()    
         
@@ -357,7 +354,7 @@ class database():
         #return len(self.c.fetchall())  
 
 
-    def get_column_name(table_name, conn, c):
+    def get_column_name(self,table_name, conn, c):
         self.c.execute("PRAGMA table_info({})".format(table_name))
         return [x[1] for x in self.c.fetchall()]
     

@@ -34,7 +34,6 @@ def get_HITRAN_ID():
     return ID
 
 
-
 class downloader():
     
     def __init__(self,url,path):
@@ -45,7 +44,6 @@ class downloader():
     def download(self):
         urllib.urlretrieve(self.url,os.path.join(self.path,self.url.split("/")[-1]))
         
-
 
 class HITRAN_Line_List_downloader():
     """
@@ -106,5 +104,16 @@ class HITRAN_CIA_downloader():
         pass
     
     
+class NIST_Spectra_downloader():
     
+    
+    def __init__(self):
+
+
+
+
+
+
+
+
     

@@ -53,6 +53,12 @@ def to_int(x):
         return None
     return int(x)
 
+def to_str(x):
+    if x == None or x == "None":
+        return None
+    return str(x)
+
+
 def isfile(path):
 
     return os.path.isfile(path)
