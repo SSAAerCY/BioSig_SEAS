@@ -40,6 +40,10 @@ def calc_transmittance(tau):
     """
     return np.exp(-tau)
 
+def calc_reflectance(tau, albedo):
+    
+    return np.exp(-tau)*albedo
+
 def calc_H(Temperature, MeanMolWeight, SurfaceG, r=2):
     """
     calculate atmospheric scale height
