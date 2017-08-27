@@ -28,12 +28,14 @@ import time
 import urllib2
 import httplib
 
-def link_loader(link, safeguard=True, iter=3, mecha="", mechanize=False):
+def link_loader(link, safeguard=True, iter=3, mecha="", mechanize=False,timer=0):
     """
     load a url into page information
     if saveguard is true, will try to compensite for errors occuring during failed load
     """
-    #time.sleep(1)
+    
+    if timer!=0:
+        time.sleep(timer)
     
     if iter == 0:
         print "iteration link loading failed"
