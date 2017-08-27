@@ -31,7 +31,7 @@ def check_file_exist(file_path):
 
     return os.path.isfile(file_path)
 
-def check_path_exist(save_path, create=True, overwrite=False):
+def check_path_exist(save_path, create=True, overwrite=False, Verbose=False):
     """
     check if path exists. If path exist and overwrite is True, will remove the existing path and content
     then replace with an empty path. If path doesn't exist and create is True, will create an empty path
@@ -39,27 +39,48 @@ def check_path_exist(save_path, create=True, overwrite=False):
     """
     
     if os.path.isdir(save_path):
-        print "Path exist, ",
+        
+        if Verbose:
+            print "Path exist, ",
         if overwrite:
             shutil.rmtree(save_path)
             os.makedirs(save_path)
-            print "overwrite existing path with clean path"
+            if Verbose:
+                print "overwrite existing path with clean path"
         else:
-            print "no overwrite"
+            if Verbose:
+                print "no overwrite"
         return True
     else:
-        print "Path not exist, "
+        if Verbose:
+            print "Path not exist,",
         if create:
             os.makedirs(save_path)
-            print "path created"
+            if Verbose:
+                print "path created"
         else:
-            print "path not created"        
+            if Verbose:
+                print "path not created"        
         return False
+
+def save_txt(savepath, savename, data, extension=".txt", overwrite=True, check=False):
+
+    if check:
+        check_path_exist(savepath)
+
+    save = os.path.join(savepath, savename)
+    
+    with open(save, "w") as f:
+        f.write(data)
+        f.close()
+        
     
     
-def save_npy(savepath, savename, data, overwrite=True):
+def save_npy(savepath, savename, data, overwrite=True, check=False):
     
-    check_path_exist(savepath)
+    if check:
+        check_path_exist(savepath)
+        
     save = os.path.join(savepath, savename)
 
     np.save(save, data)

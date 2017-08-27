@@ -584,6 +584,9 @@ class TS_Simulator():
             return nu, xsec
     
     
+
+    
+    
     def interpolate_overlay_effects(self,x1,y1):
         
         xsec = biosig_interpolate(x1,y1,self.nu,"C")
@@ -600,7 +603,17 @@ class TS_Simulator():
                 
         return [normalized_bio_molecule_xsec]
 
-    def load_atmosphere_geometry_model(self, bio=False, CIA=False, Rayleigh=True, result="Trans"):
+
+    def load_cloud_model(self):
+        """
+        should cloud be a model or an effect?
+        clouds are due to condensates.... 
+        I need to know more cloud stuff
+        """
+        pass
+
+
+    def load_atmosphere_geometry_model(self, bio=False, CIA=False, Rayleigh=True, result="Trans", cloud = False):
         # convert all the toggle into self variables.
 
         TotalBeams = len(self.normalized_pressure)

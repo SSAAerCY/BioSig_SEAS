@@ -3,8 +3,10 @@ input/database/*
 input/**/*.png
 input/absorption_data/HITRAN_Line_List
 input/absorption_data/HITRAN_CIA/H2-He_2011.cia
+input/absorption_data/Old_NIST_Spectra
 input/atmosphere_data/TP_Profile/TP_*
 input/atmosphere_data/Mixing_Ratio/MR_*
+input/instrument_filter
 !input/database/Example
 output/**/*.png
 output/**/*.txt

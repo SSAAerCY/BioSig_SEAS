@@ -49,8 +49,8 @@ def create_Molecule_DB():
         molecular_weight = utils.to_float(data_sheet_ranges['D%d'%num].value)
         formula          = utils.to_str(data_sheet_ranges['E%d'%num].value)
         iupac_name       = utils.to_str(data_sheet_ranges['F%d'%num].value)
-        number_atom      = utils.to_float(data_sheet_ranges['G%d'%num].value)
-        number_NH_atom   = utils.to_float(data_sheet_ranges['H%d'%num].value)
+        number_atom      = utils.to_int(data_sheet_ranges['G%d'%num].value)
+        number_NH_atom   = utils.to_int(data_sheet_ranges['H%d'%num].value)
         
         try:
             inchi        = utils.to_str(data_sheet_ranges['I%d'%num].value).split("=")[-1]
@@ -66,9 +66,10 @@ def create_Molecule_DB():
             boiling_point    = utils.to_float(data_sheet_ranges['K%d'%num].value)
         except:
             boiling_point    = None
-            
+    
         produced_by_life = utils.to_str(data_sheet_ranges['L%d'%num].value)
-
+        cas_registry     = utils.to_int(data_sheet_ranges['M%d'%num].value)
+        
         Data.append([Smile,compatible_Smile,database_number,molecular_weight,
                      formula,iupac_name,number_atom,number_NH_atom,
                      inchi,inchikey,boiling_point,produced_by_life])

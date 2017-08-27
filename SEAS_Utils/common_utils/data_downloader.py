@@ -33,6 +33,8 @@ def link_loader(link, safeguard=True, iter=3, mecha="", mechanize=False):
     load a url into page information
     if saveguard is true, will try to compensite for errors occuring during failed load
     """
+    #time.sleep(1)
+    
     if iter == 0:
         print "iteration link loading failed"
         return ""
