@@ -1,26 +1,3 @@
-#!/usr/bin/env python
-#
-# Copyright (C) 2017 - Massachusetts Institute of Technology (MIT)
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-"""
-Module used to simulate cloud code
-
-"""
-
-
 import os
 import sys
 import math
@@ -35,7 +12,6 @@ class Cloud_Simulator():
         
         self.lambd  = lambd
         self.radius = radius
-    
     
     def mie_abcd(self,m,x):
         nmax=round(2+x+(4*x**(1./3.)))
@@ -73,8 +49,7 @@ class Cloud_Simulator():
         
         if np.any(x)==0: #To avoid a singularity at x=0
             return 0,0,0
-        
-        
+    
         nmax=round(2+x+(4*x**(1./3.)))
         n1=int(nmax-1);
         n = np.arange(1,nmax+1,1)
@@ -82,9 +57,7 @@ class Cloud_Simulator():
         c1n=np.true_divide((np.multiply(n,(n+2))),(n+1))
         c2n=np.true_divide((np.true_divide(cn,n)),(n+1))
         x2=x*x
-        
         f=self.mie_abcd(m,x)
-        
         anp=(f[0,:]).real
         anpp=(f[0,:]).imag
         bnp=(f[1,:]).real
@@ -94,24 +67,21 @@ class Cloud_Simulator():
         g1[1,0:int(n1)]=anpp[1:int(nmax)]
         g1[2,0:n1]=bnp[1:int(nmax)]
         g1[3,0:n1]=bnpp[1:int(nmax)]
-        
-        
         dn=np.multiply(cn,(anp+bnp))
-        q=sum(dn);
-        qext=2*q/x2;
+        q=sum(dn)
+        qext=2*q/x2
         en=np.multiply(cn,(np.multiply(anp,anp)+
                            np.multiply(anpp,anpp)+
                            np.multiply(bnp,bnp)+
                            np.multiply(bnpp,bnpp)))
-        q=sum(en);
-        qsca=2*q/x2;
-        qabs=qext-qsca;
+        q=sum(en)
+        qsca=2*q/x2
+        qabs=qext-qsca
         fn=np.multiply((f[0,:]-f[1,:]),cn)
-        gn=(-1)**n;
+        gn=(-1)**n
         f[2,:]=np.multiply(fn,gn)
         q=sum(f[2,:])
         qb=q*(1/q)/x2
-        
         
         asy1=np.multiply(c1n,(np.multiply(anp,g1[0,:])+
                               np.multiply(anpp,g1[1,:])+
@@ -120,10 +90,8 @@ class Cloud_Simulator():
         asy2=np.multiply(c2n,(np.multiply(anp,bnp)+
                               np.multiply(anpp,bnpp)))
         
-        asy=4/x2*sum(asy1+asy2)/qsca;
-        qratio=qb/qsca;
-        
-        
+        asy=4/x2*sum(asy1+asy2)/qsca
+        qratio=qb/qsca
         return qext, qsca, qabs
     
     
@@ -147,7 +115,6 @@ class Cloud_Simulator():
         
         return mat_abs,mat_sca,mat_qext,x    
     
-    
     def GetSigma(self,mat_sca):
         
         mat_sigma = np.empty([len(self.lambd),len(self.radius)])
@@ -161,12 +128,74 @@ class Cloud_Simulator():
             countlam=countlam+1 
         return mat_sigma
     
-
     def plot(self):
-        "temporary placeholder"
-        
-                
+        "temporary placeholder"            
         plt.xlabel('Wavelength (um)')
         plt.ylabel('Sigma (cm2)')
         plt.title('Water (m = 1.33), monodisperse system')
         plt.show()
+        
+
+def test_mie(lambd,radius,index):
+    #Correct acording to Maetzler 2002
+    
+    CS = Cloud_Simulator(lambd,radius)
+    x =(2.0*np.pi*index*radius)/lambd
+
+    #CS.mie_abcd(1.58+1.0j, 2.1)
+    #ext,sca,abso = CS.Mie(5+0.4j,1)
+    ext,sca,abso = CS.Mie(x,index)
+    print ext, sca, abso
+
+def test_spect(lambd,radius,index):
+
+    CS = Cloud_Simulator(lambd,radius)
+    mat_abs,mat_sca,mat_qext,x = CS.spect(index)
+
+    for i in mat_qext.T:
+        plt.plot(lambd,i,'.-')
+
+    CS.plot()        
+            
+def test_cloud(lambd,radius,index):
+    
+    CS = Cloud_Simulator(lambd,radius)
+    mat_abs,mat_sca,mat_qext,x = CS.spect(index)
+    mat_sigma=CS.GetSigma(mat_sca)
+    
+    for i in mat_sigma.T:
+        plt.plot(lambd,i,'.-')
+
+    CS.plot()
+
+
+def test_cloud_cm(lambd,radius,index):
+    
+    CS = Cloud_Simulator(lambd,radius)
+    mat_abs,mat_sca,mat_qext,x = CS.spect(index)
+    mat_sigma_cm = np.true_divide(CS.GetSigma(mat_sca),10**(8))
+    
+    colorrange=np.arange(0.01,1,0.01)
+    for count, i in enumerate(mat_sigma_cm.T):
+        plt.plot(lambd,i,'.-', label='Radius=%s'%radius[count], color=str(colorrange[count]))
+        
+    CS.plot()
+
+if __name__ == "__main__":
+    
+    index  = 1.33
+    
+    lambd  = 0.56
+    radius = 0.2
+    test_mie(lambd,radius,index)
+    
+    lambd  = [1.1,1.2,1.3,1.4]
+    radius = np.arange(0.1,2,0.1)
+    test_spect(lambd,radius,index)
+    
+    lambd  = np.arange(0.1,2.5,0.1)
+    radius = np.arange(0.1,5,0.1)
+    test_cloud(lambd,radius,index) 
+    test_cloud_cm(lambd,radius,index)
+    
+    

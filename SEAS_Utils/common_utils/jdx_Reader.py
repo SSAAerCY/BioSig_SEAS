@@ -171,7 +171,9 @@ class JdxFile(object):
              }
 
     def __init__(self, filename):
-        jdx_data= jdx_file_reader(filename, True)
+        jdx_data = jdx_file_reader(filename, True)
+        
+        self.data = jdx_data
         self.title = jdx_data["title"]
         # CAS registry no. is not mandatory, so it may not be in the file.
         self.cas = _try_getitem(jdx_data, "cas registry no")
@@ -181,6 +183,8 @@ class JdxFile(object):
         
         self.path = _try_getitem(jdx_data, "path length")
         self.state = _try_getitem(jdx_data, "state")
+        self.source = _try_getitem(jdx_data, "$nist source")
+        
         
         
         for key in JdxFile.default_labels:
@@ -225,3 +229,12 @@ class JdxFile(object):
         if self.state == None:
             return ""
         return self.state
+    
+    def source(self):
+        
+        if self.source == None:
+            return ""
+        return self.source
+        
+    
+    
