@@ -96,7 +96,7 @@ def simulate_CIA(s):
 
 if __name__ == "__main__":
     
-    user_input = config.Configuration("user_input_dev.cfg")
+    user_input = config.Configuration("../../bin_stable/a.Main/user_input_dev.cfg")
     
     user_input["Simulation_Control"]["DB_DIR"]              = "Simulation_Band"
     user_input["Simulation_Control"]["DB_Name"]             = None#"cross_sec_simulation.db"

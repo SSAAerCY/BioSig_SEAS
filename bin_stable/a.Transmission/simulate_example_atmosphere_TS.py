@@ -38,7 +38,7 @@ import SEAS_Utils.common_utils.data_plotter as plotter
 
 if __name__ == "__main__":
     
-    user_input = config.Configuration("user_input_dev.cfg")
+    user_input = config.Configuration("../../bin_stable/a.Main/user_input_dev.cfg")
     
     user_input["Simulation_Control"]["DB_DIR"]              = "Example"
     user_input["Simulation_Control"]["DB_Name"]             = "cross_sec_Example.db"

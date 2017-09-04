@@ -214,7 +214,7 @@ def HITRAN_Line_List_reference():
 def NIST_Smile_List():
 
 
-    kwargs = {"db_name":"molecule_db.db",
+    kwargs = {"db_name":"Molecule_DB.db",
               "user":"azariven",
               "dir":"../../input/molecule_info",
               "DEBUG":False,"REMOVE":False,"BACKUP":False,"OVERWRITE":False}
@@ -222,32 +222,34 @@ def NIST_Smile_List():
     cross_db = dbm.database(**kwargs)   
     cross_db.access_db()   
 
+    """
     cmd = 'SELECT ID.smiles, ID.inchikey FROM ID,Spectra \
             WHERE ID.inchikey=Spectra.inchikey AND Spectra.has_spectra="Y"'
+    ""
+    if info == "Smiles":
+        cmd = "SELECT SMILES FROM Spectra WHERE IS_Gas='Y'"
+    elif info == "CAS":
+        cmd = "SELECT CAS FROM Spectra WHERE IS_Gas='Y'"
+    elif info == "Inchikey":
+        cmd = "SELECT Inchikey FROM Spectra WHERE IS_Gas='Y'"
+    else:
+        print "Unknown Info Type, Simulation Terminated"
+        sys.exit()
+    """
+    cmd = 'SELECT Smiles, Inchikey, CAS FROM Spectra WHERE Is_Gas="Y"'
+    
     
     result = cross_db.c.execute(cmd)
     data = np.array(result.fetchall()).T
     
+    
     smiles = data[0]
     inchikeys = data[1]
+    #CAS = data[2]
 
     return smiles, inchikeys
 
 
-    """
-    path = os.path.join("/Users/mac/Workspace/BioSig/data/NIST_data/",spectras)
-
-    filename = ""
-    for j in os.listdir(path):
-        if "jdx" in j:
-            filename = os.path.join(path,j)
-            break
-    
-    
-    result = jdx.JdxFile(filename) 
-    x = result.wn()
-    y = result.absorb()
-    """
 
 
 class Excel_Loader():

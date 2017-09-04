@@ -110,10 +110,65 @@ def create_Molecule_DB():
     cross_db.conn.commit() 
     
     
+def create_Spectra_DB():
     
+    inputfilename = os.path.join(molecule_info,"ASM4.3_Lite.xlsx")
+    inputsheetname = "Has Spectra"    
+    
+    WBI = load_workbook(inputfilename)
+    data_sheet_ranges = WBI[inputsheetname]    
+
+    kwargs = {"dir":molecule_info,
+              "db_name":"Molecule_DB2.db",
+              "user":"azariven",
+              "DEBUG":False,"REMOVE":False,"BACKUP":False,"OVERWRITE":False}
+    
+    cross_db = dbm.database(**kwargs)   
+    cross_db.access_db()   
+
+    table_name = "Spectra"
+    Header = ["Smiles", "CAS", "Inchikey","Is_Spectra", "IS_Gas", "Path"]
+    columns = [(str(x),"text") for x in Header]
+    
+    num = 2
+    Data = []
+    while True:
+        
+        Smile            = utils.to_str(data_sheet_ranges['A%d'%num].value)
+        CAS              = utils.to_str(data_sheet_ranges['M%d'%num].value)
+        if Smile == None or CAS == None:
+            break          
+        
+        Inchikey         = utils.to_str(data_sheet_ranges['J%d'%num].value).split("=")[-1]
+        Is_Spectra       = utils.to_str(data_sheet_ranges['N%d'%num].value)
+        Is_Gas           = utils.to_str(data_sheet_ranges['O%d'%num].value)
+        Path             = os.path.join(CAS,"%s_0.jdx"%CAS)
+    
+        Data.append([Smile,CAS,Inchikey,Is_Spectra,Is_Gas,Path])
+        
+  
+        
+        num+=1
+        
+        
+    if cross_db.check_table_exist(table_name) == False:
+        cross_db.create_table(table_name, *columns)
+    else:
+        cross_db.delete_table(table_name)
+        cross_db.create_table(table_name, *columns)
+    
+    for info in Data:
+        cross_db._insert_data_single_dev(table_name, info)
+    
+    cross_db.conn.commit()                
     
 
 
 if __name__ == "__main__":
     
-    create_Molecule_DB()
+    #create_Molecule_DB()
+    
+    create_Spectra_DB()
+    
+    
+    

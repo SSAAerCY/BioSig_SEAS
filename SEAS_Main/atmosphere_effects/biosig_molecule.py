@@ -33,10 +33,12 @@ import SEAS_Utils.common_utils.db_management2 as dbm
 import SEAS_Utils.common_utils.jdx_Reader as jdx
 
 
-def load_NIST_spectra(molecule,return_param,is_smile=False):
+
+
+def load_NIST_spectra(molecule,return_param,is_smile=False,name=""):
 
     kwargs = {"dir":molecule_info,
-              "db_name":"molecule_db.db",
+              "db_name":"Molecule_DB.db",
               "user":"azariven",
               "DEBUG":False,"REMOVE":False,"BACKUP":False,"OVERWRITE":False}
     
@@ -44,10 +46,16 @@ def load_NIST_spectra(molecule,return_param,is_smile=False):
     cross_db.access_db()   
 
     if is_smile:
-        cmd = "SELECT inchikey From ID WHERE Smiles='%s'"%molecule
+        cmd = "SELECT Path from Spectra Where Smiles='%s'"%molecule
     else:
-        cmd = "SELECT inchikey From ID WHERE Formula='%s'"%molecule
-    
+        if name == "CAS":
+            cmd = "SELECT Path from Spectra Where CAS='%s'"%molecule
+        elif name == "Inchikey":
+            cmd = "SELECT Path from Spectra Where Inchikey='%s'"%molecule
+        else:
+            print "unknown name, simulation terminated"
+            sys.exit()
+        
     result = cross_db.c.execute(cmd)
     
     try:
@@ -56,13 +64,7 @@ def load_NIST_spectra(molecule,return_param,is_smile=False):
         print "Molecule %s Doesn't Exist in NIST Database"%molecule
         sys.exit()
     
-    path = os.path.join(NIST_Spectra,fetch)
-    
-    filename = ""
-    for j in os.listdir(path):
-        if "jdx" in j:
-            filename = os.path.join(path,j)
-            break
+    filename = os.path.join(NIST_Spectra,fetch)
     
     data = jdx.JdxFile(filename)    
    
@@ -79,6 +81,7 @@ def load_NIST_spectra(molecule,return_param,is_smile=False):
 
 
     return x,y
+
 
 def find_nearest(array,value):
     idx = np.searchsorted(array, value, side="left")

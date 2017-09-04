@@ -44,10 +44,11 @@ from SEAS_Aux.calculation.interpolation import interpolate1d
 import SEAS_Aux.calculation.astrophysics as calc 
 import SEAS_Aux.cross_section.hapi as hp
 
+
+from SEAS_Utils.common_utils.DIRs import *
 from SEAS_Utils.common_utils.constants import *
-from SEAS_Utils.common_utils.timer import simple_timer
-from SEAS_Utils.common_utils.DIRs import TP_Profile_Data, Mixing_Ratio_Data, molecule_info, DB_DIR,Intermediate_DIR, HITRAN_CIA
 from SEAS_Utils.common_utils.data_loader import *
+from SEAS_Utils.common_utils.timer import simple_timer
 from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 import SEAS_Utils.common_utils.db_management2 as dbm
 
