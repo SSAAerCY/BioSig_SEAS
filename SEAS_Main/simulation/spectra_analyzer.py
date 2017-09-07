@@ -31,13 +31,14 @@ import sys
 import numpy as np
 import time
 from scipy import interpolate
-import matplotlib.pyplot as plt
+
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-ml = MultipleLocator(10)
+#import matplotlib.pyplot as plt
+#from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+#ml = MultipleLocator(10)
 
 import SEAS_Aux.cross_section.hapi as hp
 import SEAS_Main.simulation.noise as noise
@@ -120,7 +121,7 @@ class Spectra_Analyzer():
         
         return window
 
-    def analyze_spectra_detection(self,nu,trans,bio_trans,method="max"):
+    def analyze_spectra_detection(self,nu,nu_window,trans,bio_trans,min_signal,method="max"):
         """
         How to implement area under curve?
         """
@@ -130,7 +131,7 @@ class Spectra_Analyzer():
         detection = False
         Detected = []
         
-        for i in self.nu_window:
+        for i in nu_window:
             detected = False
             reference =  trans[list(nu).index(i[0]):list(nu).index(i[1])]
             signal = bio_trans[list(nu).index(i[0]):list(nu).index(i[1])]
@@ -139,7 +140,7 @@ class Spectra_Analyzer():
             # above certain ppm
             difference = max(signal-reference)*10**6
             # above certain comparision
-            comparison = max((signal-self.min_signal)/(reference-self.min_signal))
+            comparison = max((signal-min_signal)/(reference-min_signal))
         
             if difference > 3*noise_level:
                 detection = True

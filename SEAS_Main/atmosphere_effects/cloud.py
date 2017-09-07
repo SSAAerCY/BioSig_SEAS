@@ -29,6 +29,17 @@ import numpy as np
 import scipy.special as special
 import matplotlib.pyplot as plt
 
+
+
+class Grey_Cloud():
+    
+    def __init__(self):
+        pass
+
+
+
+
+
 class Cloud_Simulator():
     
     def __init__(self,lambd,radius):

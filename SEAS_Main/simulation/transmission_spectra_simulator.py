@@ -28,13 +28,13 @@ import sys
 import numpy as np
 import time
 from scipy import interpolate
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-ml = MultipleLocator(10)
+#from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+#ml = MultipleLocator(10)
 
 import SEAS_Main.atmosphere_geometry
 import SEAS_Main.atmosphere_property
@@ -44,7 +44,7 @@ from SEAS_Aux.calculation.interpolation import interpolate1d
 import SEAS_Aux.calculation.astrophysics as calc 
 import SEAS_Aux.cross_section.hapi as hp
 
-
+import SEAS_Utils.common_utils as utils
 from SEAS_Utils.common_utils.DIRs import *
 from SEAS_Utils.common_utils.constants import *
 from SEAS_Utils.common_utils.data_loader import *
@@ -81,6 +81,8 @@ class TS_Simulator():
         self.load_spectral_properties()
         
         self.Overlay_enable = False
+        
+        self.VERBOSE = utils.to_bool(user_input["Simulation_Control"]["VERBOSE"])
 
     def simulate_example(self):
         
@@ -337,7 +339,8 @@ class TS_Simulator():
             savepath = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["cross_section_savepath"])
             savename = os.path.join(savepath,self.user_input["Save"]["Intermediate_Data"]["cross_section_savename"])
             if check_file_exist(savename):
-                print "Cross Section Loaded from Save"
+                if self.VERBOSE:
+                    print "Cross Section Loaded from Save"
                 return np.load(savename)      
 
         print "Cross Section Interpolated from Database"
@@ -454,7 +457,8 @@ class TS_Simulator():
                 savepath = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savepath"])
                 savename = os.path.join(savepath,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savename"])
                 if check_file_exist(savename):
-                    print "Bio Cross Section Loaded from Save"
+                    if self.VERBOSE:
+                        print "Bio Cross Section Loaded from Save"
                     return np.load(savename)      
             
             nu, raw_cross_section_grid = molecule_cross_section_loader2(self.user_input, self.DB_DIR, bio_molecule)
@@ -498,7 +502,8 @@ class TS_Simulator():
                 savepath = os.path.join(Intermediate_DIR,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savepath"])
                 savename = os.path.join(savepath,self.user_input["Save"]["Intermediate_Data"]["bio_cross_section_savename"])
                 if check_file_exist(savename):
-                    print "Bio Cross Section Loaded from Save"
+                    if self.VERBOSE:
+                        print "Bio Cross Section Loaded from Save"
                     return np.load(savename)      
             
             nu, raw_cross_section_grid = exomol_cross_section_loader(self.user_input, self.nu, self.Exomol_DB_DIR, bio_molecule)

@@ -31,14 +31,13 @@ import sys
 import numpy as np
 import time
 from scipy import interpolate, stats
-import matplotlib.pyplot as plt
-
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-ml = MultipleLocator(10)
+#import matplotlib.pyplot as plt
+#from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+#ml = MultipleLocator(10)
 
 import SEAS_Utils as utils
 import SEAS_Aux.cross_section.hapi as hp
