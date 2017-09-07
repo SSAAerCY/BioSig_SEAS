@@ -26,10 +26,16 @@ import os,sys
 import shutil
 import numpy as np
 
+from openpyxl import load_workbook, Workbook
+from openpyxl.styles import colors
+from openpyxl.styles import Color, PatternFill
 
 def check_file_exist(file_path):
 
     return os.path.isfile(file_path)
+    
+    
+    
 
 def check_path_exist(save_path, create=True, overwrite=False, Verbose=False):
     """
@@ -133,7 +139,75 @@ class Saver():
         
         pass
 
+    
+class Excel_Saver():
+    
+    
+    yellowFill = PatternFill(start_color='FFFF00',
+                   end_color='FFFF00',
+                   fill_type='solid')
+    redFill = PatternFill(start_color='FFFF0000',
+                       end_color='FFFF0000',
+                       fill_type='solid')
+    
+    
+    def __init__(self, path, name):
 
+        self.path = path
+        self.name = name
+        
+        self.filename = os.path.join(self.path,self.name)
+        
+        if check_file_exist(self.filename):
+            self.load_workbook()
+        else:
+            self.create_workbook()
+        
+        self.input_data = None
+        
+    def create_workbook(self):
+        
+        self.WBI = Workbook()
+        self.save()
+    
+    def create_worksheet(self, sheet):
+        
+        self.input_data = self.WBI.create_sheet(sheet)
+        self.save()
+        
+    def load_workbook(self):
 
+        self.WBI = load_workbook(self.filename)
+            
+    def load_sheet(self, sheet):
+        
+        try:
+            self.input_data = self.WBI[sheet]
+        except:
+            self.input_data = self.create_worksheet(sheet)
+            
+    
+    def write_column_header(self, header, offset=2):
+        
+        for i,cell in enumerate(header):
+            
+            self.input_data["A%d"%(i+offset)].value = cell        
 
+    def write_row_header(self, header, offset=1):
+        
+        for i,cell in enumerate(header):
+            col = chr(ord("A")+i+offset)
+            self.input_data["%s%d"%(col, 1)].value = cell    
+    
+    def write_data(self, data, row, col, color="red"):
+    
+        self.input_data["%s%d"%(col, row)].value = data
+    
+    def save(self):
+        
+        self.WBI.save(self.filename)
+    
+    
+    
+    
     

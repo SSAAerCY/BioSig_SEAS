@@ -2,7 +2,13 @@
 
 Code attempting to figure out the state of each spectra from NIST downloaded
 
-  
+
+Look for Polynomial fit and damping
+
+what proxy molecule we can use?
+
+
+
 """
 
 

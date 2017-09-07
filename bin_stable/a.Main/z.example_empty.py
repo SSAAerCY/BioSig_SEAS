@@ -29,6 +29,10 @@ DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
 
+from SEAS_Aux.ATMOS_1.ATMOS_Xsec import Atmos_Simulation
+
+
+
 
 if __name__ == "__main__":
     

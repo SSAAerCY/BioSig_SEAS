@@ -41,6 +41,11 @@ from SEAS_Utils.common_utils.data_saver import check_path_exist, check_file_exis
 from SEAS_Main.atmosphere_effects.biosig_molecule import biosig_interpolate
 
 
+
+def window_loader(path, spliter=None, typer="float", skip=0):
+    pass
+
+
 def two_column_file_loader(path,spliter=None,type="float",skip=0):
     """
     load data from files that contains only two column
@@ -211,7 +216,7 @@ def HITRAN_Line_List_reference():
 
 
 
-def NIST_Smile_List():
+def NIST_Smile_List(expect="All"):
 
 
     kwargs = {"db_name":"Molecule_DB.db",
@@ -221,33 +226,27 @@ def NIST_Smile_List():
     
     cross_db = dbm.database(**kwargs)   
     cross_db.access_db()   
-
-    """
-    cmd = 'SELECT ID.smiles, ID.inchikey FROM ID,Spectra \
-            WHERE ID.inchikey=Spectra.inchikey AND Spectra.has_spectra="Y"'
-    ""
-    if info == "Smiles":
-        cmd = "SELECT SMILES FROM Spectra WHERE IS_Gas='Y'"
-    elif info == "CAS":
-        cmd = "SELECT CAS FROM Spectra WHERE IS_Gas='Y'"
-    elif info == "Inchikey":
-        cmd = "SELECT Inchikey FROM Spectra WHERE IS_Gas='Y'"
-    else:
-        print "Unknown Info Type, Simulation Terminated"
-        sys.exit()
-    """
-    cmd = 'SELECT Smiles, Inchikey, CAS FROM Spectra WHERE Is_Gas="Y"'
     
+    cmd = 'SELECT Smiles, Inchikey, CAS FROM Spectra WHERE Is_Gas="Y"'
     
     result = cross_db.c.execute(cmd)
     data = np.array(result.fetchall()).T
-    
-    
+
     smiles = data[0]
     inchikeys = data[1]
-    #CAS = data[2]
-
-    return smiles, inchikeys
+    CAS = data[2]
+    
+    if expect == "All":
+        return smiles, inchikeys
+    elif expect == "Smiles":
+        return smiles
+    elif expect == "Inchikey":
+        return inchikeys
+    elif expect == "CAS":
+        return CAS
+    else:
+        print "Unknown NIST output data type, Simulation Terminated"
+        sys.exit()
 
 
 

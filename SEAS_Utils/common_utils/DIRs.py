@@ -62,6 +62,6 @@ molecule_info = os.path.join(Data_DIR, "molecule_info")
 
 Intermediate_DIR = os.path.join(Data_DIR,"temporary")
 
-
+Result_DIR = Data_DIR = os.path.join(ROOT,"result")
 
 
