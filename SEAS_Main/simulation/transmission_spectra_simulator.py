@@ -757,8 +757,149 @@ class TS_Simulator():
         
         return Raw_Transit_Signal
 
-    def load_atmosphere_geometry_model_with_cloud(self, bio=False, CIA=False, Rayleigh=True, result="Trans"):
-        pass
+    def load_atmosphere_geometry_model_with_cloud(self, cloud_deck_pressure, cloud_amount,
+                                                  bio=False, CIA=False, Rayleigh=True, result="Trans",
+                                                  ):
+
+
+        TotalBeams = len(self.normalized_pressure)
+        
+        normalized_pressure         = self.normalized_pressure
+        normalized_temperature      = self.normalized_temperature
+        normalized_molecules        = self.normalized_molecules
+        normalized_abundance        = self.normalized_abundance
+        normalized_cross_section    = self.normalized_cross_section
+        normalized_scale_height     = self.normalized_scale_height     
+
+
+        if Rayleigh:
+            normalized_rayleigh      = self.normalized_rayleigh        
+
+        if CIA:
+            normalized_CIA           = self.normalized_CIA
+            normalized_abundance_ref = {}
+            for _,mol in enumerate(normalized_molecules):
+                normalized_abundance_ref[mol] = np.array(normalized_abundance).T[_]     
+
+        
+        if bio:
+            normalized_cross_section = self.bio_normalized_cross_section
+            normalized_abundance     = self.bio_normalized_abundance
+            normalized_molecules     = self.bio_normalized_molecules
+            
+            # assuming no rayleigh due to biosig molecules... could be wrong
+            normalized_rayleigh.append(np.zeros(len(normalized_rayleigh[0])))
+
+        if self.Overlay_enable:
+            normalized_overlay = self.normalized_overlay
+
+        Total_Tau = np.zeros(len(self.nu))
+        Offset = float(self.user_input["Atmosphere_Effects"]["Base_Line"]["offset"])
+        Total_Transit_Signal = np.ones(len(self.nu))*(self.Base_TS_Value+Offset)
+        base_layer = self.R_planet
+        
+        for i in range(TotalBeams):
+            
+            if i == 0:
+                prev_layer = base_layer
+                base_layer += normalized_scale_height[i]
+                # skip the bottom layer? this is the beam that "touch" the surface
+                # need to think about this when rounding
+                continue
+    
+            # opacity per beam
+            BeamTau = []
+            prev_pathl = 0
+            target_layer = base_layer        
+            for j in range(TotalBeams-i):
+                
+                target_layer += normalized_scale_height[j+i]
+                pathl = np.sin(np.arccos(base_layer/target_layer))*target_layer - prev_pathl
+                prev_pathl += pathl   
+                
+                # opacity per chunk of the beam, this can be thought as the test tube case
+                ChunkTau = []        
+                for m, molecule in enumerate(normalized_molecules):        
+                    
+                    #weird how abundance and cross section are wired differently
+                    molecular_ratio = normalized_abundance[j+i][m]
+                    number_density = (normalized_pressure[j+i]/(BoltK*normalized_temperature[j+i]))*molecular_ratio
+                    
+                    rayleigh = normalized_rayleigh[m]*molecular_ratio
+                    sigma = normalized_cross_section[m][j+i][j+i]
+                    
+                    # adding ozone cross section augmentation
+                    if molecule == "O3" and self.Overlay_enable:
+                        overlay_sigma = normalized_overlay[0][j+i][j+i]
+                        sigma = sigma+overlay_sigma
+                    
+                    #rayleigh_scat, etc should be pre calculated
+                    effects = sigma+rayleigh#+CIA+cloud
+        
+                    ChunkTau_Per_Molecule = number_density*(effects)*pathl*2*0.0001
+        
+                    
+                        
+        
+                    if ChunkTau == []:
+                        ChunkTau = ChunkTau_Per_Molecule
+                    else:
+                        ChunkTau += ChunkTau_Per_Molecule   
+
+                if CIA:
+                    for k,CIA_data in enumerate(normalized_CIA):
+                        
+                        molecule1, molecule2 = self.CIA_File[k].replace("_","-").split("-")[:2]
+                        
+                        
+                        molecular_ratio1 = normalized_abundance_ref[molecule1][j+i]
+                        molecular_ratio2 = normalized_abundance_ref[molecule2][j+i]
+                        
+                        number_density1 = (normalized_pressure[j+i]/(BoltK*normalized_temperature[j+i]))*molecular_ratio1
+                        number_density2 = (normalized_pressure[j+i]/(BoltK*normalized_temperature[j+i]))*molecular_ratio2
+                        
+                        CIA_sigma = CIA_data[j+i]
+                        
+                        Chunk_CIA_Tau = number_density1*number_density2*CIA_sigma*pathl*2*100*100**-3*100**-3
+    
+                        ChunkTau += Chunk_CIA_Tau      
+                
+
+                if normalized_pressure[j+i] > cloud_deck_pressure:
+                    ChunkTau += np.ones(len(self.nu))*cloud_amount
+                        
+                if BeamTau == []:
+                    BeamTau = ChunkTau
+                else:
+                    BeamTau += ChunkTau                       
+            
+            if result == "Trans":
+                
+                BeamTrans = calc.calc_transmittance(BeamTau)  
+                RingArea = (base_layer**2-prev_layer**2)/self.R_Star**2
+                
+                Ring_Transit_Signal = (1-BeamTrans)*RingArea
+                Total_Transit_Signal += Ring_Transit_Signal
+            
+            elif result == "Absorp":
+                
+                Total_Tau += BeamTau
+            
+            # update to the next beam up
+            prev_layer = base_layer
+            base_layer += normalized_scale_height[i]        
+        
+        
+        self.min_signal = (self.R_planet/self.R_Star)**2
+        self.max_signal = ((self.R_planet+sum(normalized_scale_height))/self.R_Star)**2
+        
+        
+        if result == "Trans":
+            Raw_Transit_Signal = Total_Transit_Signal
+        elif result == "Absorp":
+            Raw_Transit_Signal = Total_Tau
+        
+        return Raw_Transit_Signal
         
         
         

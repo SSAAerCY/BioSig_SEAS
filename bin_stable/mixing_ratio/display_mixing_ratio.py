@@ -36,7 +36,7 @@ import SEAS_Utils.common_utils.data_plotter as plt
 if __name__ == "__main__":
     
 
-    user_input = config.Configuration("user_input_dev.cfg")
+    user_input = config.Configuration("../a.Main/user_input_dev.cfg")
     
     if user_input["Simulation_Control"]["Mixing_Ratio"] == "File":
         filename = os.path.join(Mixing_Ratio_Data,user_input["Simulation_Control"]["Mixing_Ratio_Name"])
