@@ -18,6 +18,15 @@
 """
 Noise Module. Handles all noise associated works
 
+Field convention is to convert the spectra into some sort of flux and then photon count
+Then use sqrt of photon count as noise base?
+
+or a defined noise floor?
+
+or ... stuff. 
+
+What exactly is JWST Pandexo simulation doing anyway?
+
 """
 import numpy as np
 
@@ -63,7 +72,10 @@ class Shot_Noise(Poisson_Noise):
     def __init__(self):
         pass
         
+class Photon_Noise():
     
+    def __init__(self):
+        pass
 
 
 class Gaussian_Noise(Noise):

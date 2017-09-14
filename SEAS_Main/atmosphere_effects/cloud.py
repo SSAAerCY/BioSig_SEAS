@@ -18,6 +18,11 @@
 """
 Module used to simulate cloud code
 
+
+is there a maximum amount to the number density of certain gas before it condense out?
+
+
+
 """
 
 

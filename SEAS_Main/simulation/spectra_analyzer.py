@@ -25,6 +25,8 @@ instead of normalized_xxx, let's have a dict with pressure_layers as keys and re
 Takes in a simulated theoretical spectra and add observational effects
 
 
+atmosphere window/filter nomenclature?
+
 """
 import os
 import sys
