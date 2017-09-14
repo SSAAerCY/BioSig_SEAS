@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 import SEAS_Main.atmosphere_geometry
 import SEAS_Main.atmosphere_property
 from SEAS_Main.atmosphere_effects.biosig_molecule import load_NIST_spectra, biosig_interpolate
+from SEAS_Main.atmosphere_effects.cloud import Simple_Gray_Cloud_Simulator
 
 from SEAS_Aux.calculation.interpolation import interpolate1d
 import SEAS_Aux.calculation.astrophysics as calc 
@@ -757,9 +758,9 @@ class TS_Simulator():
         
         return Raw_Transit_Signal
 
-    def load_atmosphere_geometry_model_with_cloud(self, cloud_deck_pressure, cloud_amount,
-                                                  bio=False, CIA=False, Rayleigh=True, result="Trans",
-                                                  ):
+    def load_atmosphere_geometry_model_with_cloud(self, cloud_deck_pressure, cloud_absorption_amount,
+                                                  Cloud=True, bio=False, CIA=False, Rayleigh=True, 
+                                                  result="Trans"):
 
 
         TotalBeams = len(self.normalized_pressure)
@@ -771,6 +772,8 @@ class TS_Simulator():
         normalized_cross_section    = self.normalized_cross_section
         normalized_scale_height     = self.normalized_scale_height     
 
+        if Cloud:
+            c = Simple_Gray_Cloud_Simulator(cloud_deck_pressure,cloud_absorption_amount)
 
         if Rayleigh:
             normalized_rayleigh      = self.normalized_rayleigh        
@@ -781,7 +784,6 @@ class TS_Simulator():
             for _,mol in enumerate(normalized_molecules):
                 normalized_abundance_ref[mol] = np.array(normalized_abundance).T[_]     
 
-        
         if bio:
             normalized_cross_section = self.bio_normalized_cross_section
             normalized_abundance     = self.bio_normalized_abundance
@@ -838,8 +840,6 @@ class TS_Simulator():
         
                     ChunkTau_Per_Molecule = number_density*(effects)*pathl*2*0.0001
         
-                    
-                        
         
                     if ChunkTau == []:
                         ChunkTau = ChunkTau_Per_Molecule
@@ -864,10 +864,11 @@ class TS_Simulator():
     
                         ChunkTau += Chunk_CIA_Tau      
                 
-
-                if normalized_pressure[j+i] > cloud_deck_pressure:
-                    ChunkTau += np.ones(len(self.nu))*cloud_amount
-                        
+                # Simulating cloud
+                if Cloud:
+                    ChunkTau += c.get_cloud_absorption(self.nu, normalized_pressure[j+i])
+                    
+                # Sum up all the absorption along the beam 
                 if BeamTau == []:
                     BeamTau = ChunkTau
                 else:

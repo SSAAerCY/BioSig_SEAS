@@ -31,17 +31,89 @@ import matplotlib.pyplot as plt
 
 
 
-class Grey_Cloud():
-    
+class Cloud_Simulator():
+    """
+    Placeholder base class for all cloud models... 
+    """
     def __init__(self):
         pass
 
+
+class Simple_Gray_Cloud_Simulator(Cloud_Simulator):
+    """
+    Well, Americans call it "Gray", English call it "Grey".
+    
+    Simplistic Cloud model that assumed a cloud deck at a given pressure
+    It's assumed the same cloudiness (optical depth) below the cloud deck
+    It's also assumed that the cloud are wavelength/wavenumber independent.
+    """
+    
+    def __init__(self, 
+                 cloud_deck_pressure=100, 
+                 cloud_absorption_amount=0.1):
+
+        self.deck = cloud_deck_pressure
+        self.absorb = cloud_absorption_amount
+        
+    def get_cloud_absorption(self, nu, pressure, wn=True):
+        
+        if pressure >= self.deck:
+            return np.ones(len(nu))*self.absorb
+        else:
+            return np.zeros(len(nu))
+
+
+class Complex_Gray_Cloud_Simulator(Cloud_Simulator):
+    """
+    A place for testing some more interesting gray clouds, not very physical.
+    Precursor to implementing a more physical model in the future.
+    
+    A more complex varient of the simple gray that could potentially have
+        1. varying absorption (optical depth) 
+        2. multiple cloud decks and cloud truncate
+        3. wavelength/wavenumber dependent
+            a. single/multiple shapes? profiles? 
+        4. scattering due to different objects in the sky?
+        5. asymetric cloud? this could be a bit difficult to implement
+        6. time varying cloud? this would need a dynamic transit simulation...
+        7. different output methods?
+     
+    """
+
+    def __init__(self, 
+                 cloud_deck_pressure=[100,10000], 
+                 cloud_absorption_amount=[0.1,1],
+                 cloud_truncate_pressure = 100000):
+
+        self.deck = cloud_deck_pressure
+        self.absorb = cloud_absorption_amount
+        self.truncate = cloud_truncate_pressure
+    
+    
+    def simulate_profile(self, profile):
+        """
+        Let's start with some gaussian profiles?
+        """
+        pass
+    
+    def get_cloud_cross_section(self):
+        "Placeholder"
+        pass
+    
+        
+    def get_cloud_absorption(self, nu, pressure, wn=True):
+        """
+        returns cloud absorption
+        """
+        
+        if pressure >= self.deck:
+            return np.ones(len(nu))*self.absorb
+        else:
+            return np.zeros(len(nu))
     
 
 
-
-
-class Cloud_Simulator():
+class Physical_Cloud_Simulator():
     
     def __init__(self,lambd,radius):
         
