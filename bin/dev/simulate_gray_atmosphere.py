@@ -100,10 +100,18 @@ def simulate_NIST(s,o,a):
     plt_ref = sim_plot.plot_xy(nu,ref_trans,"ref.","r")
     plt_legend.append(plt_ref)   
     
+    cloud_deck = 1000 # 100mbar
+    cloud_amount = 0.5    
+
+    s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud(cloud_deck,cloud_amount)
+    nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
+    plt_ref = sim_plot.plot_xy(nu,clo_trans,"%s"%cloud_amount)
+    plt_legend.append(plt_ref)
+   
+    """
     cloud_deck = 10000 # 100mbar
     cloud_amount = 0.1    
-    
-    """
+
     # cloud absorption
     for cloud_amount in [0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10]:
         s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud(cloud_deck,cloud_amount)
@@ -111,6 +119,7 @@ def simulate_NIST(s,o,a):
         plt_ref = sim_plot.plot_xy(nu,clo_trans,"%s"%cloud_amount)
         plt_legend.append(plt_ref)
     """
+    
     """
     # cloud deck 
     for cloud_deck in [100000,10000,1000,100,10,1,0.1,0.01,0.001]:
@@ -120,14 +129,14 @@ def simulate_NIST(s,o,a):
         plt_legend.append(plt_ref)
     """
     # comparison study
-    
+    """
     for cloud_amount in [0.01,0.1,1]:
         for cloud_deck in [1000,1]:
             s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud(cloud_deck,cloud_amount)
             nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
             plt_ref = sim_plot.plot_xy(nu,clo_trans,"D%s_A%s"%(cloud_deck,cloud_amount))
             plt_legend.append(plt_ref)    
-    
+    """
     
    
     s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
@@ -163,6 +172,8 @@ if __name__ == "__main__":
     user_input["Save"]["Plot"]["save"] = False    
     user_input["Save"]["Plot"]["path"] = "../../output/Plot_Result"
     user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename1
+    
+    user_input["Plotting"]["Figure"]["x_scale"] = "linear"
     
     simulation = theory.TS_Simulator(user_input)
     observer   = observe.OS_Simulator(user_input)

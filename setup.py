@@ -19,4 +19,11 @@
 Reserved for future uses. 
 Will be needed potentially to check that all the packages required for simulation is installed.
 
+Code usable as is
+
 """
+
+
+
+if __name__ == "__main__":
+    pass

@@ -106,12 +106,15 @@ class Simulation_Plotter():
         fig_h = utils.to_int(self.user_input["Plotting"]["Figure"]["figsize_h"])
         
         self.fig = plt.figure(figsize=(fig_w, fig_h))
+        
         self.ax = plt.gca()
+        
         self.ax.xaxis.set_minor_formatter(FormatStrFormatter("%.1f"))
 
         
         xticks = ticker.MaxNLocator(10)
-        self.ax.xaxis.set_major_locator(xticks)  
+        self.ax.xaxis.set_major_locator(xticks) 
+        
         
         self.x_unit  = self.user_input["Plotting"]["Figure"]["x_unit"]
         self.x_scale = self.user_input["Plotting"]["Figure"]["x_scale"]

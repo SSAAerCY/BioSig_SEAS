@@ -43,7 +43,7 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 #ml = MultipleLocator(10)
 
 import SEAS_Aux.cross_section.hapi as hp
-import SEAS_Main.simulation.noise as noise
+import SEAS_Main.observation_effects.noise as noise
 
 from PyAstronomy import pyasl
 
@@ -123,7 +123,7 @@ class Spectra_Analyzer():
         
         return window
 
-    def analyze_spectra_detection(self,nu,nu_window,trans,bio_trans,min_signal,method="max"):
+    def analyze_spectra_detection(self,nu,nu_window,trans,bio_trans,min_signal,method="max",result="bool"):
         """
         How to implement area under curve?
         """
@@ -132,9 +132,10 @@ class Spectra_Analyzer():
         comp = 2
         detection = False
         Detected = []
-        
+        Detected_num = []
         for i in nu_window:
             detected = False
+            detected_num = 0
             reference =  trans[list(nu).index(i[0]):list(nu).index(i[1])]
             signal = bio_trans[list(nu).index(i[0]):list(nu).index(i[1])]
             
@@ -147,15 +148,19 @@ class Spectra_Analyzer():
             if difference > 3*noise_level:
                 detection = True
                 detected = True
+                detected_num = 1
             if comparison > comp:
                 detection = True
                 detected = True
+                detected_num = 1
                 
             
             Detected.append(detected)
-                
-        
-        return detection, Detected
+            Detected_num.append(detected_num)
+        if result == "bool":
+            return detection, Detected
+        elif result == "num":
+            return detection, Detected_num
         
     def spectra_SNR(self, X, Signal_Diff):
         

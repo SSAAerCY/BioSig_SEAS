@@ -29,26 +29,22 @@ import matplotlib.pyplot as plt
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
-from SEAS_Main.atmosphere_effects.cloud import Cloud_Simulator
+from SEAS_Main.atmosphere_effects.cloud import Physical_Cloud_Simulator
 
 
 
 def test_cloud(lambd,radius,index):
                
-    CS = Cloud_Simulator(lambd,radius)
+    CS = Physical_Cloud_Simulator(lambd,radius)
     mat_abs,mat_sca,mat_qext,x = CS.spect(index)
     mat_sigma=CS.GetSigma(mat_sca)
     
     for i in mat_sigma.T:
-        plt.plot(lambd,i,'.-')
+        plt.plot(lambd,np.array(i)/100,'.-')
 
     CS.plot()
 
 
-def log_norma(sigma,mu):
-
-    return (np.exp(-(np.log(x) - mu)**2 / (2 * sigma**2))
-        /(x * sigma * np.sqrt(2 * np.pi)))
 
 if __name__ == "__main__":
     
@@ -60,11 +56,16 @@ if __name__ == "__main__":
     index = [real,imag]
     
     
+    we need a particle number density
+    pressure and temperature dependence?
+    
+    condensation rate? point? temperature? molecule?
+    
     """
     
     index  = 1.33
     lambd  = np.arange(400,30000,10)
-    lambd = 10000./lambd[::-1]
+    lambd = 10000./lambd
     radius = [1]#np.arange([1,2,3,4]) # this should be a log normal distribution
 
 

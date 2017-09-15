@@ -41,7 +41,7 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import SEAS_Utils as utils
 import SEAS_Aux.cross_section.hapi as hp
-import noise
+import SEAS_Main.observation_effects.noise as noise
 
 
 class OS_Simulator():

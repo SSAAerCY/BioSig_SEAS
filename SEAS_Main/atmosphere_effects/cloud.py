@@ -251,6 +251,14 @@ class Physical_Cloud_Simulator():
         return mat_sigma
     
 
+    def get_cloud_absorption(self, nu, pressure, wn=True):
+        
+        if pressure >= self.deck:
+            return np.ones(len(nu))*self.absorb
+        else:
+            return np.zeros(len(nu))
+
+
     def plot(self):
         "temporary placeholder"
         
