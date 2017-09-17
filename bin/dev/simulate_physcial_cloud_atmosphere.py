@@ -110,10 +110,19 @@ def simulate_NIST(s,o,a):
     plt_legend.append(plt_ref)
     
     """
-    index = 1.33
-    radius = [1,2,3]
+    index = [1.33,0.1]
+    radius = [0.1,0.2,0.5,1,2,5,10]
     cloud_deck = 1000
 
+    """
+    for radius in [0.1,0.2,0.5,1,2,5,10]:
+        s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud2(index, radius, cloud_deck)
+        nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
+        plt_ref = sim_plot.plot_xy(nu,clo_trans,"R=%s"%radius)
+        plt_legend.append(plt_ref)
+
+    """
+    radius = 
     for cloud_deck in [100000,10000,1000,100,10,1,0.1,0.01,0.001]:
         s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud2(index, radius, cloud_deck)
         nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)

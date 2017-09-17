@@ -837,7 +837,8 @@ class TS_Simulator():
                     
                     #rayleigh_scat, etc should be pre calculated
                     effects = sigma+rayleigh#+CIA+cloud
-        
+                    print max(sigma)
+                    sys.exit()
                     ChunkTau_Per_Molecule = number_density*(effects)*pathl*2*0.0001
         
         
@@ -919,8 +920,8 @@ class TS_Simulator():
 
         if Cloud:
             c = Physical_Cloud_Simulator(10000./self.nu,radius)
-            mat_abs,mat_sca,mat_qext,x = c.spect(index)
-            mat_sigma=c.GetSigma(mat_sca)
+            mat_abs,mat_sca,mat_qext,x = c.spect(index[0],index[1])
+            mat_sigma=c.GetSigma(mat_qext)
 
         if Rayleigh:
             normalized_rayleigh      = self.normalized_rayleigh        

@@ -124,6 +124,10 @@ class Physical_Cloud_Simulator():
         
         self.lambd  = lambd
         self.radius = radius
+        
+        
+        if type(self.radius) != type([]):
+            self.radius = [self.radius]
     
     
     def mie_abcd(self,m,x):
@@ -216,39 +220,79 @@ class Physical_Cloud_Simulator():
         return qext, qsca, qabs
     
     
-    def spect(self, index):
+  
+        
+        
+
+    def spect(self,index_real,index_imag):
         #rads can be a particle distribution
+        #index varies with lamda
         countlam = 0
-        index_of_refrac_medium = 1.0
-        mat_abs  = np.empty([len(self.lambd),len(self.radius)])
-        mat_sca  = np.empty([len(self.lambd),len(self.radius)])
-        mat_qext = np.empty([len(self.lambd),len(self.radius)])
-        for l in self.lambd:
+        
+        lams = self.lambd
+        rads = self.radius
+        
+        
+        mat_abs = np.empty([len(lams),len(rads)])
+        mat_sca = np.empty([len(lams),len(rads)])
+        mat_qext = np.empty([len(lams),len(rads)])
+        mat_x = np.empty([len(lams),len(rads)])
+        for l in lams:
             countrad = 0
-            for r in self.radius:
-                x =(2.0*np.pi*index_of_refrac_medium*r)/l
-                qext,qsca,qabs = self.Mie(x, index)
+            for r in rads:  
+                x =np.true_divide((2.0*np.pi*r),float(l))
+                i=1.0j
+                try:
+                    realandimag = float(index_real[countlam])+(float(index_imag[countlam])*i)
+                except:
+                    realandimag = index_real+index_imag*i
+    
+                qext,qsca,qabs = self.Mie(realandimag,x)
                 mat_abs[countlam,countrad] = qabs
                 mat_sca[countlam,countrad] = qsca
                 mat_qext[countlam,countrad] = qext
+                mat_x[countlam,countrad] = x
                 countrad=countrad+1
             countlam=countlam+1
         
-        return mat_abs,mat_sca,mat_qext,x    
+        return mat_abs,mat_sca,mat_qext,mat_x 
+
+    def calc_cloud_number_density(self, 
+                                  air_number_density = 1.225*10**-3,
+                                  particle_mixing_ratio = 4.62*10**-6,
+                                  particle_density = 4.09,
+                                  particle_radius = 1*10**-4,
+                                  result = "cm"):
+        
+        unit_particle_mass = particle_density*4/3*np.pi*particle_radius**3
+        
+        particle_vapor_density = air_number_density*particle_mixing_ratio
+        
+        particles_number_density = particle_vapor_density/unit_particle_mass
+        
+        if result == "cm":
+            return particles_number_density
+        elif result == "m":
+            return particles_number_density*10**6
+        
+        
     
-    
-    def GetSigma(self,mat_sca):
+    def GetSigma(self,mat_qext,unit="um"):
         
         mat_sigma = np.empty([len(self.lambd),len(self.radius)])
         countlam=0
         for l in self.lambd:
             countrad = 0
             for r in self.radius:
-                sigma=np.pi*(r**2)*(mat_sca[countlam,countrad])
+                sigma=np.pi*(r**2)*(mat_qext[countlam,countrad])
                 mat_sigma[countlam,countrad] = sigma
                 countrad=countrad+1
             countlam=countlam+1 
-        return mat_sigma
+            
+        if unit == "um":
+            return mat_sigma
+        elif unit == "cm":
+            return np.array(mat_sigma)/10**8
     
 
     def get_cloud_absorption(self, nu, pressure, wn=True):
