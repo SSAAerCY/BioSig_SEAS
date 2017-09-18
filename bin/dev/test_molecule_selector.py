@@ -16,7 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This is a clean empty example. 
+Due to molecules coming from various data source, 
+we need a way to rank which source to select first.
  
 
 """

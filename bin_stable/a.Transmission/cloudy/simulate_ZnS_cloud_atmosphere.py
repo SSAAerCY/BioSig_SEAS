@@ -27,8 +27,10 @@ import sys
 import numpy as np
 import random
 
+
+track = "../../.."
 DIR = os.path.abspath(os.path.dirname(__file__))
-sys.path.insert(0, os.path.join(DIR, '../../..'))
+sys.path.insert(0, os.path.join(DIR, track))
 
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
@@ -76,18 +78,15 @@ def simulate_NIST(s,o,a):
     s.Rayleigh_enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["Rayleigh"]["enable"])
     if s.Rayleigh_enable:
         s.normalized_rayleigh = s.load_rayleigh_scattering()   
-    
 
 
-    user_input["Plotting"]["Figure"]["Title"] = "Simulated Earth-like Exoplanet Atmosphere Comparison Study"
+    user_input["Plotting"]["Figure"]["Title"] = "Simulated Earth-like Exoplanet Atmosphere with ZnS Clouds Below 10000pa"
     user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
     user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
     
     sim_plot = plotter.Simulation_Plotter(s.user_input)
 
     
-
-         
     # calculate theoretical transmission spectra
     
     s.Reference_Transit_Signal = s.load_atmosphere_geometry_model()
@@ -100,6 +99,7 @@ def simulate_NIST(s,o,a):
     plt_ref = sim_plot.plot_xy(nu,ref_trans,"ref.","r")
     plt_legend.append(plt_ref)   
     
+    """
     cloud_deck = 1000 # 100mbar
     cloud_amount = 0.5    
 
@@ -107,38 +107,39 @@ def simulate_NIST(s,o,a):
     nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
     plt_ref = sim_plot.plot_xy(nu,clo_trans,"%s"%cloud_amount)
     plt_legend.append(plt_ref)
-   
-    """
-    cloud_deck = 10000 # 100mbar
-    cloud_amount = 0.1    
-
-    # cloud absorption
-    for cloud_amount in [0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10]:
-        s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud(cloud_deck,cloud_amount)
-        nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
-        plt_ref = sim_plot.plot_xy(nu,clo_trans,"%s"%cloud_amount)
-        plt_legend.append(plt_ref)
-    """
     
     """
-    # cloud deck 
+    index = [1.33,0.1]
+    radius = [0.1,0.2,0.5,1,2,5,10]
+    cloud_deck = 1000
+
+    """
+    for radius in [0.1,0.2,0.5,1,2,5,10]:
+        s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud2(index, radius, cloud_deck)
+        nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
+        plt_ref = sim_plot.plot_xy(nu,clo_trans,"R=%s"%radius)
+        plt_legend.append(plt_ref)
+
+    """
+    """
+    radius = [1] 
     for cloud_deck in [100000,10000,1000,100,10,1,0.1,0.01,0.001]:
-        s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud(cloud_deck,cloud_amount)
+        s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud2(index, radius, cloud_deck)
         nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
         plt_ref = sim_plot.plot_xy(nu,clo_trans,"%s"%cloud_deck)
         plt_legend.append(plt_ref)
     """
-    # comparison study
-    """
-    for cloud_amount in [0.01,0.1,1]:
-        for cloud_deck in [1000,1]:
-            s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud(cloud_deck,cloud_amount)
-            nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
-            plt_ref = sim_plot.plot_xy(nu,clo_trans,"D%s_A%s"%(cloud_deck,cloud_amount))
-            plt_legend.append(plt_ref)    
-    """
     
-   
+    radius = 1
+    cloud_deck = 10000
+    
+    for radius in [1,2,3]:
+        
+        s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud3(radius, cloud_deck)
+        nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
+        plt_ref = sim_plot.plot_xy(nu,clo_trans,"R=%s"%radius)
+        plt_legend.append(plt_ref)    
+    
     s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
     sim_plot.plot_window(s.nu_window,"k", 0.2)
 
@@ -154,7 +155,7 @@ if __name__ == "__main__":
     
     Timer = simple_timer()
     
-    user_input = config.Configuration("../../../bin_stable/a.Main/user_input_dev.cfg")
+    user_input = config.Configuration(os.path.join(track,"bin_stable/a.Main/user_input_dev.cfg"))
     
     Filename = "Test_Earth"
     Filename1 = "Test_Earth_with_biosig"
@@ -165,15 +166,15 @@ if __name__ == "__main__":
     user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "earth.txt"
 
     user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "%s_Cross_Section.npy"%Filename
-    user_input["Save"]["Window"]["path"] = "../../../output/Simple_Atmosphere_Window"
+    user_input["Save"]["Window"]["path"] = os.path.join(track,"output/Simple_Atmosphere_Window")
     user_input["Save"]["Window"]["name"] = "%s_Window_A1000_S100.txt"%Filename1
     
     user_input["Save"]["Plot"] = {}
     user_input["Save"]["Plot"]["save"] = False    
-    user_input["Save"]["Plot"]["path"] = "../../../output/Plot_Result"
+    user_input["Save"]["Plot"]["path"] = os.path.join(track,"output/Plot_Result")
     user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename1
     
-    user_input["Plotting"]["Figure"]["x_scale"] = "linear"
+    #user_input["Plotting"]["Figure"]["x_scale"] = "linear"
     
     simulation = theory.TS_Simulator(user_input)
     observer   = observe.OS_Simulator(user_input)

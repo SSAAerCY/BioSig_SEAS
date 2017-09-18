@@ -220,10 +220,6 @@ class Physical_Cloud_Simulator():
         return qext, qsca, qabs
     
     
-  
-        
-        
-
     def spect(self,index_real,index_imag):
         #rads can be a particle distribution
         #index varies with lamda
@@ -311,3 +307,59 @@ class Physical_Cloud_Simulator():
         plt.ylabel('Sigma (cm2)')
         plt.title('Water (m = 1.33), monodisperse system')
         plt.show()
+
+
+
+
+class File_Cloud_Simulator():
+    
+    def __init__(self,lambd,radius):
+        
+        self.lambd  = lambd
+        self.radius = radius
+        
+        if type(self.radius) != type([]):
+            self.radius = [self.radius]
+
+    def calc_cloud_number_density(self, 
+                                  air_number_density = 1.225*10**-3,
+                                  particle_mixing_ratio = 4.62*10**-6,
+                                  particle_density = 4.09,
+                                  particle_radius = 1*10**-4,
+                                  result = "cm"):
+        
+        unit_particle_mass = particle_density*4/3*np.pi*particle_radius**3
+        
+        particle_vapor_density = air_number_density*particle_mixing_ratio
+        
+        particles_number_density = particle_vapor_density/unit_particle_mass
+        
+        if result == "cm":
+            return particles_number_density
+        elif result == "m":
+            return particles_number_density*10**6    
+    
+        
+    def get_cloud_cross_section(self,filename):
+        
+
+        data = np.load(filename)
+    
+        radius = data[0]
+        wavelength = data[1]
+        result = data[2]
+        
+        xsec_list = []
+        
+        #for i,radius in enumerate(result):
+        i = self.radius[0]-1
+        radius = result[1]
+        for j,xsec in enumerate(radius):
+            xsec_list.append(result[i][j][0])
+         
+        return wavelength, np.array(xsec_list)
+            
+
+
+
+

@@ -27,8 +27,10 @@ import sys
 import numpy as np
 import random
 
+
+track = "../../.."
 DIR = os.path.abspath(os.path.dirname(__file__))
-sys.path.insert(0, os.path.join(DIR, '../..'))
+sys.path.insert(0, os.path.join(DIR, track))
 
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
@@ -122,7 +124,7 @@ def simulate_NIST(s,o,a):
         plt_legend.append(plt_ref)
 
     """
-    radius = 
+    radius = [1] 
     for cloud_deck in [100000,10000,1000,100,10,1,0.1,0.01,0.001]:
         s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud2(index, radius, cloud_deck)
         nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
@@ -182,7 +184,7 @@ if __name__ == "__main__":
     
     Timer = simple_timer()
     
-    user_input = config.Configuration("../../bin_stable/a.Main/user_input_dev.cfg")
+    user_input = config.Configuration(os.path.join(track,"bin_stable/a.Main/user_input_dev.cfg"))
     
     Filename = "Test_Earth"
     Filename1 = "Test_Earth_with_biosig"
@@ -193,12 +195,12 @@ if __name__ == "__main__":
     user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "earth.txt"
 
     user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "%s_Cross_Section.npy"%Filename
-    user_input["Save"]["Window"]["path"] = "../../output/Simple_Atmosphere_Window"
+    user_input["Save"]["Window"]["path"] = os.path.join(track,"output/Simple_Atmosphere_Window")
     user_input["Save"]["Window"]["name"] = "%s_Window_A1000_S100.txt"%Filename1
     
     user_input["Save"]["Plot"] = {}
     user_input["Save"]["Plot"]["save"] = False    
-    user_input["Save"]["Plot"]["path"] = "../../output/Plot_Result"
+    user_input["Save"]["Plot"]["path"] = os.path.join(track,"output/Plot_Result")
     user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename1
     
     #user_input["Plotting"]["Figure"]["x_scale"] = "linear"
