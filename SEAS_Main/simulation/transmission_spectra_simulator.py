@@ -44,6 +44,7 @@ from SEAS_Main.atmosphere_effects.cloud import Simple_Gray_Cloud_Simulator,Physi
 from SEAS_Aux.calculation.interpolation import interpolate1d
 import SEAS_Aux.calculation.astrophysics as calc 
 import SEAS_Aux.cross_section.hapi as hp
+from SEAS_Aux.ATMOS_1.ATMOS_Xsec import ATMOS_1_Simulator
 
 import SEAS_Utils.common_utils as utils
 from SEAS_Utils.common_utils.DIRs import *
@@ -541,7 +542,35 @@ class TS_Simulator():
             
             return nu, normalized_bio_molecule_xsec
   
+        elif data_type == "ATMOS":
+            
+            window = "earth2_atmosphere"
+            pressure = 10e6
+            temperature = 300
         
+            Simulator = ATMOS_1_Simulator(bio_molecule, window, pressure, temperature)
+
+            Pref = 10000.
+            Tref = 300.        
+            nref = Pref/(BoltK*Tref)
+            lref = 0.05        
+            
+            # interpolation
+            yinterp = Simulator.get_cross_section(self.nu)
+            sigma = (yinterp)/(nref*lref)*10000
+
+            
+
+            # need to know how to scale cross sections
+            X = self.normalized_pressure        
+            Y = self.normalized_temperature  
+            normalized_bio_molecule_xsec = []
+            for i in range(len(X)):
+                normalized_bio_molecule_xsec.append([])
+                for j in range(len(Y)):
+                    normalized_bio_molecule_xsec[i].append(sigma)
+
+            return self.nu, [normalized_bio_molecule_xsec]
 
 
 

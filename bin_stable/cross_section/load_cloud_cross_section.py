@@ -33,10 +33,10 @@ from SEAS_Main.atmosphere_effects.cloud import Physical_Cloud_Simulator
 
 
 
-def test_cloud(lambd,radius,index):
+def test_cloud(lambd,radius,index, index_imag):
                
     CS = Physical_Cloud_Simulator(lambd,radius)
-    mat_abs,mat_sca,mat_qext,x = CS.spect(index)
+    mat_abs,mat_sca,mat_qext,x = CS.spect(index,index_imag)
     mat_sigma=CS.GetSigma(mat_sca)
     
     for i in mat_sigma.T:
@@ -64,9 +64,10 @@ if __name__ == "__main__":
     """
     
     index  = 1.33
+    imag = 0
     lambd  = np.arange(400,30000,10)
     lambd = 10000./lambd
     radius = [1]#np.arange([1,2,3,4]) # this should be a log normal distribution
 
 
-    test_cloud(lambd,radius,index)
+    test_cloud(lambd,radius,index,imag)
