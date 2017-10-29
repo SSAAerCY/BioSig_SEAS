@@ -42,7 +42,7 @@ from SEAS_Utils.common_utils.data_loader import NIST_Smile_List
 from SEAS_Utils.common_utils.timer import simple_timer
 
 
-def simulate_NIST(s,o,a):
+def simulate_Exomol(s,o,a):
 
     s.Timer = simple_timer(4)
     
@@ -136,6 +136,107 @@ def simulate_NIST(s,o,a):
     return s
 
 
+def simulate_Exomol_Multi(s,o,a):
+
+    s.Timer = simple_timer(4)
+    
+    #create a base flat spectra based on planetary parameters
+    s.Surface_g, s.Base_TS_Value = s.load_astrophysical_properties()
+    
+    # normalized pressure directly correspond to atmosphere layers.
+    s.normalized_pressure = s.load_atmosphere_pressure_layers()
+    
+    # load mixing ration files and determine what molecules are added to the simulation
+    # acquire the mixing ratio at each pressure (need to be interpolated to normalized pressure)
+    s.normalized_molecules, s.MR_Pressure, s.molecule_MR = s.load_mixing_ratio()
+    s.normalized_abundance = s.interpolate_mixing_ratio()
+    
+    # load temperature pressure profile
+    s.TP_Pressure, s.TP_Temperature = s.load_TP_profile()        
+    s.normalized_temperature = s.interpolate_TP_profile()
+    
+    # calculate the scale height for each layer of the atmosphere
+    s.normalized_scale_height = s.calculate_scale_height()
+    
+    # load molecular cross section for main constituent of the atmosphere
+    # will check first to see if the molecule is in the database 
+    s.cross_db = s.check_molecules()
+    s.nu, s.normalized_cross_section = s.load_molecule_cross_section()
+
+    print "load time", s.Timer.elapse()
+    
+    # load rayleigh scattering
+    s.Rayleigh_enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["Rayleigh"]["enable"])
+    if s.Rayleigh_enable:
+        s.normalized_rayleigh = s.load_rayleigh_scattering()   
+    
+    
+    s.Overlay_enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["Overlay"]["enable"])
+    if s.Overlay_enable:
+        o_nu, o_xsec = s.load_overlay_effects(dtype="HITRAN")
+        s.normalized_overlay = s.interpolate_overlay_effects(o_nu,o_xsec)
+         
+    # calculate theoretical transmission spectra
+    s.Reference_Transit_Signal = s.load_atmosphere_geometry_model()
+    
+    # calculate observed transmission spectra
+    nu,ref_trans = o.calculate_convolve(s.nu, s.Reference_Transit_Signal)
+    
+    # analyze the spectra
+    s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
+    
+    user_input["Plotting"]["Figure"]["Title"] = "Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of PH3 at various ppm"
+    user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
+    user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
+    
+    sim_plot = plotter.Simulation_Plotter(s.user_input)
+    
+    """
+    for i in s.nu_window:
+        print "%.2f-%.2f"%(10000./i[1],10000./i[0])
+    sys.exit()
+    """
+    legends = []
+    
+    sim_plot.plot_window(s.nu_window,"k", 0.2)
+    
+    
+    for bio_abundance in np.array([0.01,0.1,1,10,100])*10**-6:
+        # load biosignature molecules
+        bio_enable = utils.to_bool(s.user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"])
+        if bio_enable == True:
+            data_type     = s.user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"]
+            bio_molecule  = s.user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"]
+            s.is_smile      = utils.to_bool(s.user_input["Atmosphere_Effects"]["Bio_Molecule"]["is_smile"])
+            s.nu, s.bio_cross_section = s.load_bio_molecule_cross_section(bio_molecule, data_type)
+        
+            s.bio_normalized_cross_section = np.concatenate([s.normalized_cross_section, s.bio_cross_section], axis=0)
+    
+            # modify the molecular abundance after adding biosignatures
+            # scale heights untouched still since effect is small
+            s.bio_normalized_abundance = []
+            for i,abundance in enumerate(s.normalized_abundance):
+                s.bio_normalized_abundance.append([])
+                for j in abundance:
+                    s.bio_normalized_abundance[i].append(j*(1-bio_abundance))
+                s.bio_normalized_abundance[i].append(bio_abundance)
+            s.bio_normalized_molecules = np.concatenate([s.normalized_molecules,[bio_molecule]], axis=0)
+        
+        s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable)
+        nu,bio_trans = o.calculate_convolve(s.nu, s.Bio_Transit_Signal)
+        plt_ref_1 = sim_plot.plot_xy(nu,bio_trans,"%s"%(bio_abundance*10**6))
+        legends.append(plt_ref_1)
+    
+    plt_ref = sim_plot.plot_xy(nu,ref_trans,"ref.", "b")
+    
+    legends.append(plt_ref)
+    sim_plot.set_legend(legends)
+    
+    print "la"
+    sim_plot.show_plot()
+    
+    return s
+
 if __name__ == "__main__":
     
     
@@ -175,5 +276,5 @@ if __name__ == "__main__":
     observer   = observe.OS_Simulator(user_input)
     analyzer   = analyze.Spectra_Analyzer(user_input)
     
-    simulation = simulate_NIST(simulation, observer, analyzer)         
+    simulation = simulate_Exomol_Multi(simulation, observer, analyzer)         
     

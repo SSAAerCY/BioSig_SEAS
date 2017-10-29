@@ -205,7 +205,23 @@ class Simulation_Plotter():
         
         save_dir  = self.user_input["Save"]["Plot"]["path"]
         save_name = self.user_input["Save"]["Plot"]["name"] 
+        
+        check_path_exist(save_dir)
+        
         plt.savefig(os.path.join(save_dir,save_name))
+
+
+    def save_window(self, nu_window):
+        
+        save_dir  = self.user_input["Save"]["Window"]["path"]
+        save_name = self.user_input["Save"]["Window"]["name"]         
+
+        check_path_exist(save_dir)
+        with open(os.path.join(save_dir,save_name),"w") as file:
+            for window in nu_window:
+                file.write("%s-%s\n"%(window[0],window[1]))
+            file.close()
+
 
     def show_plot(self):
         

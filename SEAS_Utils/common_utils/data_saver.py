@@ -77,7 +77,9 @@ def save_txt(savepath, savename, data, extension=".txt", overwrite=True, check=F
     save = os.path.join(savepath, savename)
     
     with open(save, "w") as f:
-        f.write(data)
+        for i in data:
+            f.write("%s %s\n"%(i[0],i[1]))
+            
         f.close()
         
     
@@ -165,6 +167,7 @@ class Excel_Saver():
         
         self.input_data = None
         
+        
     def create_workbook(self):
         
         self.WBI = Workbook()
@@ -172,19 +175,30 @@ class Excel_Saver():
     
     def create_worksheet(self, sheet):
         
-        self.input_data = self.WBI.create_sheet(sheet)
-        self.save()
+        return self.WBI.create_sheet(title=sheet)
         
     def load_workbook(self):
 
         self.WBI = load_workbook(self.filename)
-            
-    def load_sheet(self, sheet):
+    
+    def delete_sheet(self,sheet):
         
-        try:
-            self.input_data = self.WBI[sheet]
-        except:
-            self.input_data = self.create_worksheet(sheet)
+        self.WBI.remove_sheet(self.WBI.get_sheet_by_name(sheet))
+    
+
+    
+    def load_sheet(self, sheet, default=True):
+        
+        if default:
+            try:
+                self.input_data = self.WBI[sheet]
+            except:
+                self.input_data = self.create_worksheet(sheet)
+        else:
+            try:
+                return self.WBI[sheet]
+            except:
+                return self.create_worksheet(sheet)
             
     
     def write_column_header(self, header, offset=2):
@@ -198,6 +212,14 @@ class Excel_Saver():
         for i,cell in enumerate(header):
             col = chr(ord("A")+i+offset)
             self.input_data["%s%d"%(col, 1)].value = cell    
+    
+    def write_column(self,column_data,column_offset=0,row_offset=0):
+        
+        col = chr(ord("A")+column_offset)
+        for i,cell in enumerate(column_data):
+            self.input_data["%s%d"%(col,i+row_offset)].value = cell
+    
+    
     
     def write_data(self, data, row, col, color="red"):
     

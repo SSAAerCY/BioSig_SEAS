@@ -64,9 +64,15 @@ class simple_timer():
             
         
         
-        precision = ("%"+".%sf"%(int(self.precision)/2))%(percent*100)
-        
-        result = " %s Percent Completed, Estimated %ss Remaining"%(precision, estimated_time_remaining)
+        percent_precision = ("%"+".%sf"%(int(self.precision)/2))%(percent*100)
+        try:
+            remaining_precision = ("%"+".%sf"%(int(self.precision)/2))%(estimated_time_remaining)
+            hour_precision = ("%"+".%sf"%(int(self.precision)/2))%(estimated_time_remaining/3600.)
+        except:
+            remaining_precision = estimated_time_remaining
+            hour_precision = estimated_time_remaining
+            
+        result = " %s Percent Completed, Estimated %ss (%shr) Remaining"%(percent_precision, remaining_precision,hour_precision)
         
         return result
 

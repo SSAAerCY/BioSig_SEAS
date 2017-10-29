@@ -155,10 +155,13 @@ def calc_rayleigh(molecule, nu_range):
         nv = nvmo/10**8 +1
         Fk = 1.096+1.385*10**-11*nu_range**2+1.448*10**-20*nu_range**2    
     
-    elif molecule == "H2~":
+    elif molecule == "H2":
         # not implemented yet
-        nvmo = nu_range
-        Fk = 1
+        lambd = 10000./nu_range*10**-4
+        sigma = 8.49*10**-45/lambd**4
+        
+        return sigma
+        
     else:
         return np.zeros(len(nu_range))
 

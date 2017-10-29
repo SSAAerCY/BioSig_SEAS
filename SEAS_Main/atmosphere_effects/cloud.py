@@ -32,7 +32,7 @@ import math
 import cmath
 import numpy as np
 import scipy.special as special
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 
@@ -167,7 +167,6 @@ class Physical_Cloud_Simulator():
         if np.any(x)==0: #To avoid a singularity at x=0
             return 0,0,0
         
-        
         nmax=round(2+x+(4*x**(1./3.)))
         n1=int(nmax-1);
         n = np.arange(1,nmax+1,1)
@@ -219,7 +218,6 @@ class Physical_Cloud_Simulator():
         
         return qext, qsca, qabs
     
-    
     def spect(self,index_real,index_imag):
         #rads can be a particle distribution
         #index varies with lamda
@@ -270,9 +268,7 @@ class Physical_Cloud_Simulator():
             return particles_number_density
         elif result == "m":
             return particles_number_density*10**6
-        
-        
-    
+          
     def GetSigma(self,mat_qext,unit="um"):
         
         mat_sigma = np.empty([len(self.lambd),len(self.radius)])
@@ -290,7 +286,6 @@ class Physical_Cloud_Simulator():
         elif unit == "cm":
             return np.array(mat_sigma)/10**8
     
-
     def get_cloud_absorption(self, nu, pressure, wn=True):
         
         if pressure >= self.deck:
@@ -307,6 +302,58 @@ class Physical_Cloud_Simulator():
         plt.ylabel('Sigma (cm2)')
         plt.title('Water (m = 1.33), monodisperse system')
         plt.show()
+
+    def crosssec_logdist(self):
+        #calculate the total mixing ratio of the substance in the atmosphere, assuming solar abundance and LTE
+        #figure out how many particles fill up the proper number density. 
+        # contribution to number desnity = 1/# molecules per particle
+        
+        #calculate the cross section for a big range of particle radii at a granular level
+        #radrange = np.arange(0.01,5,0.01)
+    
+    
+
+        
+        
+        """
+        ZnS_abs,ZnS_sca,ZnS_qext,ZnS_x = self.spect(radrange,ZnS_wavelength[0:294],ZnS_n[0:294],ZnS_k[0:294])
+        ZnS_cross = self.GetSigma(ZnS_wavelength[0:294],radrange,ZnS_qext)
+        
+        Total_xsec = np.zeros(294)
+        for xsec in ZnS_cross.T:
+            Total_xsec += xsec 
+        
+        
+        plt.plot(ZnS_wavelength[:294],Total_xsec)
+        """
+
+
+
+class Physical_Cloud_Simulator_new(Physical_Cloud_Simulator):
+    
+    def __init__(self, lambd):
+        
+        self.lambd = lambd
+    
+    def calc_cloud_number_density(self, 
+                                  air_number_density = 1.225*10**-3,
+                                  particle_mixing_ratio = 4.62*10**-6,
+                                  particle_density = 4.09,
+                                  particle_radius = 1*10**-4,
+                                  result = "cm"):
+        
+        unit_particle_mass = particle_density*4/3*np.pi*particle_radius**3
+        
+        particle_vapor_density = air_number_density*particle_mixing_ratio
+        
+        particles_number_density = particle_vapor_density/unit_particle_mass
+        
+        if result == "cm":
+            return particles_number_density
+        elif result == "m":
+            return particles_number_density*10**6    
+
+
 
 
 

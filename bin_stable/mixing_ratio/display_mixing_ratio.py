@@ -31,7 +31,9 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 import SEAS_Utils.common_utils.configurable as config
 from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data
 from SEAS_Utils.common_utils.data_loader import multi_column_file_loader
-import SEAS_Utils.common_utils.data_plotter as plt
+#import SEAS_Utils.common_utils.data_plotter as plt
+
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     
@@ -48,8 +50,17 @@ if __name__ == "__main__":
         mixing_ratio = data[1:]
         print pressure
         print mixing_ratio
+        
+        P_0 = float(pressure[1])
+        for i,MR in enumerate(mixing_ratio):
+            
+            plt.plot(MR[1:],-np.log(np.array(pressure[1:], dtype="float")/P_0))
+            break
 
-
+        plt.xscale("log")
+        #plt.yscale("log")
+        #plt.gca().invert_yaxis()
+        plt.show()
 
 
 

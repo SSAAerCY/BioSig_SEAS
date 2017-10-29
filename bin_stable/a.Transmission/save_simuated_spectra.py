@@ -117,10 +117,24 @@ if __name__ == "__main__":
     
     nu,ref_trans = simulate_NIST(simulation, observer, analyzer)         
     
-    save_npy(user_input["Save"]["Spectra"]["path"],
-             user_input["Save"]["Spectra"]["name"],
-             [nu, ref_trans])
+    #save_npy(user_input["Save"]["Spectra"]["path"],
+    #         user_input["Save"]["Spectra"]["name"],
+    #         [nu, ref_trans])
+    user_input["Save"]["Spectra"]["name"] = "new.txt"
+    outdir = os.path.join(user_input["Save"]["Spectra"]["path"],
+                          user_input["Save"]["Spectra"]["name"])
     
+    wav = 10000./nu[::-1]
+    wav_trans = ref_trans[::-1]
+    
+    with open(outdir,"w") as f:
+        for i,n in enumerate(nu):
+            if wav[i]>1.5 and wav[i]<14:
+                f.write("%.4f %.4f\n"%(wav[i],wav_trans[i]*10))
+    
+    
+    plt.plot(wav,wav_trans)
+    plt.show()
     
     
     

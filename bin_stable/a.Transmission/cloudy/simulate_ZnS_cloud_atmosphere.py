@@ -44,7 +44,7 @@ from SEAS_Utils.common_utils.data_loader import NIST_Smile_List
 from SEAS_Utils.common_utils.timer import simple_timer
 
 
-def simulate_NIST(s,o,a):
+def simulate_ZnS_Cloud(s,o,a):
 
     s.Timer = simple_timer(4)
     
@@ -109,10 +109,11 @@ def simulate_NIST(s,o,a):
     plt_legend.append(plt_ref)
     
     """
+    """
     index = [1.33,0.1]
     radius = [0.1,0.2,0.5,1,2,5,10]
     cloud_deck = 1000
-
+    """
     """
     for radius in [0.1,0.2,0.5,1,2,5,10]:
         s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model_with_cloud2(index, radius, cloud_deck)
@@ -129,7 +130,7 @@ def simulate_NIST(s,o,a):
         plt_ref = sim_plot.plot_xy(nu,clo_trans,"%s"%cloud_deck)
         plt_legend.append(plt_ref)
     """
-    
+    """
     radius = 1
     cloud_deck = 10000
     radius_name = [0.1,1,10]
@@ -139,6 +140,12 @@ def simulate_NIST(s,o,a):
         nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
         plt_ref = sim_plot.plot_xy(nu,clo_trans,"R=%s"%radius_name[radius-1])
         plt_legend.append(plt_ref)    
+    """
+    s.Cloudy_Transit_Signal = s.load_atmosphere_geometry_model(Cloud=True)
+    nu,clo_trans = o.calculate_convolve(s.nu, s.Cloudy_Transit_Signal)
+    plt_ref = sim_plot.plot_xy(nu,clo_trans,"ZnS")
+    plt_legend.append(plt_ref)     
+    
     
     s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
     sim_plot.plot_window(s.nu_window,"k", 0.2)
@@ -174,11 +181,13 @@ if __name__ == "__main__":
     user_input["Save"]["Plot"]["path"] = os.path.join(track,"output/Plot_Result")
     user_input["Save"]["Plot"]["name"] = "%s_Plot.png"%Filename1
     
+    user_input["Atmosphere_Effects"]["Cloud"]["model"] = "physical"
+    
     #user_input["Plotting"]["Figure"]["x_scale"] = "linear"
     
     simulation = theory.TS_Simulator(user_input)
     observer   = observe.OS_Simulator(user_input)
     analyzer   = analyze.Spectra_Analyzer(user_input)
     
-    simulation = simulate_NIST(simulation, observer, analyzer)         
+    simulation = simulate_ZnS_Cloud(simulation, observer, analyzer)         
     

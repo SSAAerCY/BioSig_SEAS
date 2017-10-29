@@ -8,6 +8,7 @@ input/absorption_data/Old_NIST_Spectra
 input/atmosphere_data/TP_Profile/TP_*
 input/atmosphere_data/Mixing_Ratio/MR_*
 input/instrument_filter
+input/temporary
 !input/database/Example
 output/**/*.png
 output/**/*.txt

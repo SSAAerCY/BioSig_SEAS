@@ -60,7 +60,7 @@ if __name__ == "__main__":
     temperature = 300
     
     for smiles in molecule_input:
-
+        print 
         Simulator = ATMOS_1_Simulator(smiles, window, pressure, temperature)
         nu  = np.arange(400,30000,1)
         xsec = Simulator.get_cross_section(nu)

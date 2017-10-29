@@ -26,7 +26,7 @@ DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
-import SEAS_Main.simulation.observer as obs
+import SEAS_Main.simulation.observed_spectra_simulator as observer
 
 import SEAS_Utils as utils
 import SEAS_Utils.common_utils.configurable as config
@@ -34,7 +34,7 @@ import SEAS_Utils.common_utils.data_plotter as plotter
 from SEAS_Utils.common_utils.timer import simple_timer
 
 
-def simulate_CIA(s):
+def simulate_CIA(s,o):
     
     s.Timer = simple_timer(4)
     
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     
     user_input["Simulation_Control"]["DB_DIR"]              = "Simulation_Band"
     user_input["Simulation_Control"]["DB_Name"]             = None#"cross_sec_simulation.db"
-    user_input["Simulation_Control"]["TP_Profile_Name"]     = "isothermal_300K.txt"
+    user_input["Simulation_Control"]["TP_Profile_Name"]     = "earth.txt"
     user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "H2&He.txt"
 
     user_input["Planet"]["R_Planet"] = 10
@@ -112,10 +112,10 @@ if __name__ == "__main__":
     user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "Temp_H2&He_Cross_Section.npy"
 
     simulation = theory.TS_Simulator(user_input)
-    
+    observer   = observer.OS_Simulator(user_input)
     #Raw_TS = simulation.simulate_CIA()
     
-    Raw_TS = simulate_CIA(simulation)
+    Raw_TS = simulate_CIA(simulation, observer)
     
     
     

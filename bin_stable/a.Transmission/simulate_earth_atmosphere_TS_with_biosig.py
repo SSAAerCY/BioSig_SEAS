@@ -155,7 +155,9 @@ if __name__ == "__main__":
     user_input["Save"]["Window"]["path"] = "../../output/Simple_Atmosphere_Window"
     user_input["Save"]["Window"]["name"] = "%s_Window_A1000_S100.txt"%Filename1
     
-    molecule_smiles, inchikeys = NIST_Smile_List()
+    
+    info = NIST_Smile_List()
+    molecule_smiles = info[0]
     Bio_Molecule = random.choice(molecule_smiles)
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"

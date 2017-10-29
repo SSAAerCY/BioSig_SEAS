@@ -129,10 +129,7 @@ class mixing_ratio_generator():
             
         print "Mixing Ratio file saved to %s"%save_path
     
-    
-    
-    
-    
+
     
     
     

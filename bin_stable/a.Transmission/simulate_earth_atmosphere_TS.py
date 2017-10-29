@@ -69,6 +69,7 @@ if __name__ == "__main__":
     nu, Trans = observer.calculate_convolve(Raw_nu, Raw_TS)
 
     user_input["Plotting"]["Figure"]["Title"] = "Transit Signal for Simulated Earth Atmosphere"
+    user_input["Plotting"]["Figure"]["x_scale"] = "linear"
     user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
     user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
     

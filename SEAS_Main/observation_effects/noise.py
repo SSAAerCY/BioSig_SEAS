@@ -146,25 +146,6 @@ class Telescope_Noise(Noise):
         pass
 
 
-class JWST_Noise(Telescope_Noise):
-
-    def __init__(self):
-        pass
-
-    def get_MIRI_noise(self):
-        pass
-    
-    def get_NIRCam_noise(self):
-        pass
-    
-    def get_NIRISS_noise(self):
-        pass
-    
-    def get_NIRSpec_noise(self):
-        pass
-
-
-
 
 
 

@@ -126,6 +126,7 @@ class Spectra_Analyzer():
     def analyze_spectra_detection(self,nu,nu_window,trans,bio_trans,min_signal,method="max",result="bool"):
         """
         How to implement area under curve?
+        bin size?
         """
         
         noise_level = 10

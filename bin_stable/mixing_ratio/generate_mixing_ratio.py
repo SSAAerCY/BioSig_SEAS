@@ -30,14 +30,7 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 import SEAS_Aux.atmosphere_processes.mixing_ratio_generator as mix
 import SEAS_Utils.common_utils.configurable as config
 
-def generate_water():
-
-    ratio_input = config.Configuration("water_only_selection.cfg")
-    simulator = mix.mixing_ratio_generator(ratio_input,filler=False,name="selection/water_only2.txt")
-    simulator.generate()
-    simulator.save()
-
-if __name__ == "__main__":
+def generate_h2():
     
     ratio_input = config.Configuration("selection/h2_only_selection.cfg")
 
@@ -49,7 +42,47 @@ if __name__ == "__main__":
                                            overwrite=True)
     simulator.generate()
     simulator.save()
+
+def generate_water():
+
+    ratio_input = config.Configuration("water_only_selection.cfg")
+    simulator = mix.mixing_ratio_generator(ratio_input,filler=False,name="selection/water_only2.txt")
+    simulator.generate()
+    simulator.save()
     
+    
+def generate_iso_earth():
+
+    ratio_input = config.Configuration("selection/well_mixed_earth.cfg")
+
+    simulator = mix.mixing_ratio_generator(ratio_input,
+                                           filler=True,
+                                           filler_molecule="N2",
+                                           pressures = [100000.0, 36800.0, 13500.0, 4980.0, 1830.0, 674.0, 248.0, 91.2, 33.5, 12.3, 4.54, 1.67, 0.614, 0.226, 0.0832, 0.0306, 0.0113, 0.00414, 0.00152, 0.00056, 0.000206, 7.58e-05, 2.79e-05, 1.03e-05],
+                                           name="iso_earth.txt",
+                                           overwrite=True)
+    simulator.generate()
+    simulator.save()
+
+
+def generate_h2_and_more():
+    
+    ratio_input = config.Configuration("selection/h2_and_more.cfg")
+
+    simulator = mix.mixing_ratio_generator(ratio_input,
+                                           filler=True,
+                                           filler_molecule="He",
+                                           pressures = [100000.0, 36800.0, 13500.0, 4980.0, 1830.0, 674.0, 248.0, 91.2, 33.5, 12.3, 4.54, 1.67, 0.614, 0.226, 0.0832, 0.0306, 0.0113, 0.00414, 0.00152, 0.00056, 0.000206, 7.58e-05, 2.79e-05, 1.03e-05],
+                                           name="H2&More.txt",
+                                           overwrite=True)
+    simulator.generate()
+    simulator.save() 
+    
+
+if __name__ == "__main__":
+    
+
+    generate_h2_and_more()
     
     
     

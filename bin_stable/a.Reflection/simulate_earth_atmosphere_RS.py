@@ -74,18 +74,19 @@ def simulate(s,o,a):
     
     s.Reference_Reflect_Signal = s.load_atmosphere_geometry_model()
     
-    
+    nu,ref_trans = o.calculate_convolve(s.nu, s.normalized_stellar_spectra)
+    nu,refl_trans = o.calculate_convolve(s.nu, s.normalized_stellar_spectra*s.Reference_Reflect_Signal)    
     
     
     s.user_input["Plotting"]["Figure"]["y_multiplier"] = 1
-    s.user_input["Plotting"]["Figure"]["Title"] = "Simulated Earth Atmosphere Reflection Spectra (with rayleigh scattering)"
+    s.user_input["Plotting"]["Figure"]["Title"] = "Simulated Earth Atmosphere Reflection Spectra"
     s.user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
     s.user_input["Plotting"]["Figure"]["y_label"] = r"Flux Density (W/m^2)"    
     
     sim_plot = plotter.Simulation_Plotter(s.user_input)
 
-    plt_ref_1 = sim_plot.plot_xy(s.nu,s.normalized_stellar_spectra,"Stellar Spectra")
-    plt_ref_2 = sim_plot.plot_xy(s.nu,s.normalized_stellar_spectra*s.Reference_Reflect_Signal,"Reflection Spectra")
+    plt_ref_1 = sim_plot.plot_xy(nu,ref_trans,"Stellar Spectra")
+    plt_ref_2 = sim_plot.plot_xy(nu,refl_trans,"Reflection Spectra")
 
     sim_plot.set_legend([plt_ref_1, plt_ref_2])
     if utils.to_bool(user_input["Save"]["Plot"]["save"]):

@@ -46,7 +46,7 @@ def window_loader(path, spliter=None, typer="float", skip=0):
     pass
 
 
-def two_column_file_loader(path,spliter=None,type="float",skip=0):
+def two_column_file_loader(path,spliter=None,type="float",skip=0, skipper="#", seeker="null"):
     """
     load data from files that contains only two column
     """
@@ -55,6 +55,21 @@ def two_column_file_loader(path,spliter=None,type="float",skip=0):
         data = [x.split(spliter) for x in data_file.read().split("\n")[skip:]]
         if data[-1] == []:
             data = data[:-1]        
+        
+        for i,info in enumerate(data):
+            if skipper in info:
+                continue
+            else:
+                data = data[i+1:]
+                break
+                
+        for i,info in enumerate(data):
+            if seeker in info:
+                data = data[i+1:]
+                break
+        
+            
+            
         xdata,ydata = [list(x) for x  in zip(*data)]     
         if type == "float":
             return np.array(xdata,dtype=np.float),np.array(ydata,dtype=np.float)
@@ -75,8 +90,9 @@ def multi_column_file_loader(path,spliter=None,type="float",skip=0):
     
     with open(path) as data_file:   
         data = [x.split(spliter) for x in data_file.read().split("\n")[skip:]]
-        if data[-1] == []:
+        if data[-1] == [] or data[-1] == None or data[-1] == "":
             data = data[:-1]
+        
         
         data = [list(x) for x  in zip(*data)]    
         
@@ -227,7 +243,7 @@ def NIST_Smile_List(expect="All"):
     cross_db = dbm.database(**kwargs)   
     cross_db.access_db()   
     
-    cmd = 'SELECT Smiles, Inchikey, CAS FROM Spectra WHERE Is_Gas="Y"'
+    cmd = 'SELECT ID.SMILES, ID.InChiKey, Spectra.CAS, ID.Formula FROM ID,Spectra WHERE ID.SMILES=Spectra.Smiles AND Spectra.Is_Gas="Y"'
     
     result = cross_db.c.execute(cmd)
     data = np.array(result.fetchall()).T
@@ -235,9 +251,10 @@ def NIST_Smile_List(expect="All"):
     smiles = data[0]
     inchikeys = data[1]
     CAS = data[2]
+    formula = data[3]
     
     if expect == "All":
-        return smiles, inchikeys
+        return smiles, inchikeys,CAS,formula
     elif expect == "Smiles":
         return smiles
     elif expect == "Inchikey":
