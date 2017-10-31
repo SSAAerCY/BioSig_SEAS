@@ -1,6 +1,7 @@
 result/*
 bin_personal/*
 input/database/*
+input/pandexo/*
 input/**/*.png
 input/absorption_data/HITRAN_Line_List
 input/absorption_data/HITRAN_CIA/H2-He_2011.cia

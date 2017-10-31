@@ -26,6 +26,7 @@ import os
 import sys
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
@@ -40,7 +41,7 @@ import SEAS_Utils.common_utils.configurable as config
 from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 from SEAS_Utils.common_utils.data_loader import NIST_Smile_List
 from SEAS_Utils.common_utils.timer import simple_timer
-from SEAS_Utils.common_utils.data_saver import save_npy
+from SEAS_Utils.common_utils.data_saver import save_npy, save_txt
 
 def simulate_NIST(s,o,a):
 
@@ -116,7 +117,7 @@ def simulate_NIST(s,o,a):
     s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
     
     
-    return nu, ref_trans, bio_trans
+    return nu, ref_trans, bio_trans,s
 
 
 if __name__ == "__main__":
@@ -138,12 +139,14 @@ if __name__ == "__main__":
     user_input["Save"]["Window"]["path"] = "../../output/Simple_Atmosphere_Window"
     user_input["Save"]["Window"]["name"] = "%s_Window_A1000_S100.txt"%Filename1
     
-    molecule_smiles, inchikeys = NIST_Smile_List()
-    Bio_Molecule = random.choice(molecule_smiles)
+    info = NIST_Smile_List()
+    molecule_smiles = info[0]
+    bio_molecule = random.choice(molecule_smiles)
+    bio_abundance = 1*10**-6
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"
-    user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = Bio_Molecule
-    user_input["Atmosphere_Effects"]["Bio_Molecule"]["abundance"] = 1*10**-6
+    user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = bio_molecule
+    user_input["Atmosphere_Effects"]["Bio_Molecule"]["abundance"] = bio_abundance
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["is_smile"] = True
     
     user_input["Atmosphere_Effects"]["Overlay"]["enable"] = True
@@ -153,13 +156,34 @@ if __name__ == "__main__":
     observer   = observe.OS_Simulator(user_input)
     analyzer   = analyze.Spectra_Analyzer(user_input)
     
-    nu, ref_trans, bio_trans = simulate_NIST(simulation, observer, analyzer)         
+    nu, ref_trans, bio_trans,s = simulate_NIST(simulation, observer, analyzer)         
 
     user_input["Save"]["Spectra"]["save"] = True
     user_input["Save"]["Spectra"]["path"] = "../../output/Simulated_Spectra"
     user_input["Save"]["Spectra"]["name"] = "%s_Spectra_with_Biosig_Data"%Filename1
 
+    """
     save_npy(user_input["Save"]["Spectra"]["path"],
              user_input["Save"]["Spectra"]["name"],
              [nu, ref_trans, bio_trans])
+    """
+    
+    user_input["Plotting"]["Figure"]["Title"] = "Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of %s at %s ppm"%(bio_molecule,bio_abundance*10**6)
+    user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
+    user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
+    
+    sim_plot = plotter.Simulation_Plotter(s.user_input)
+    
+    plt_ref_1 = sim_plot.plot_xy(nu,bio_trans,"with_bio")
+    plt_ref_2 = sim_plot.plot_xy(nu,ref_trans,"ref.")
+    
+    sim_plot.plot_window(s.nu_window,"k", 0.2)
+    sim_plot.set_legend([plt_ref_1, plt_ref_2])
+    sim_plot.show_plot()
+    
+
+    save_txt("../../bin_stable/pandexo","ref_trans.txt",np.array([10000./nu[::-1],ref_trans[::-1]]).T)
+    save_txt("../../bin_stable/pandexo","bio_trans.txt",np.array([10000./nu[::-1],bio_trans[::-1]]).T)
+    
+    
         
