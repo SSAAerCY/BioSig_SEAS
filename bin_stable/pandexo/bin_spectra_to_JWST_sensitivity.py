@@ -202,7 +202,7 @@ def display_compare():
     m1,n1,x1,y1,e1 = jpi.jwst_1d_spec(out1, R=Bins, num_tran=Tran, model=True, x_range=[1,13])
     m2,n2,x2,y2,e2 = jpi.jwst_1d_spec(out2, R=Bins, num_tran=Tran, model=True, x_range=[1,13])
     
-    """
+    
     plt.plot(m1,n1, label="base_ref")
     plt.errorbar(x1,y1,e1,fmt="o",markersize='5', label="base_obs")
     
@@ -216,7 +216,7 @@ def display_compare():
     
     plt.show()
     """
-    
+    """
     #detection = y2-y1# +3*(e1+e2)
     x1 = np.array(x1[0])
     

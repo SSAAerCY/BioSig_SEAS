@@ -159,6 +159,8 @@ if __name__ == "__main__":
     info = NIST_Smile_List()
     molecule_smiles = info[0]
     Bio_Molecule = random.choice(molecule_smiles)
+    
+    Bio_Molecule = "CSC"
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = Bio_Molecule

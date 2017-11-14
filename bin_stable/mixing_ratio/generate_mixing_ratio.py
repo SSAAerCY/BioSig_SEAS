@@ -29,6 +29,8 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import SEAS_Aux.atmosphere_processes.mixing_ratio_generator as mix
 import SEAS_Utils.common_utils.configurable as config
+from SEAS_Utils.common_utils.DIRs import HITRAN_Lines
+
 
 def generate_h2():
     
@@ -77,13 +79,46 @@ def generate_h2_and_more():
                                            overwrite=True)
     simulator.generate()
     simulator.save() 
+
+
+
+def generate_all_hitran():
+    
+    ratio_input = config.Configuration("selection/all_HITRAN.cfg")
+
+    simulator = mix.mixing_ratio_generator(ratio_input,
+                                           filler=True,
+                                           filler_molecule="He",
+                                           pressures = [100000.0, 36800.0, 13500.0, 4980.0, 1830.0, 674.0, 248.0, 91.2, 33.5, 12.3, 4.54, 1.67, 0.614, 0.226, 0.0832, 0.0306, 0.0113, 0.00414, 0.00152, 0.00056, 0.000206, 7.58e-05, 2.79e-05, 1.03e-05],
+                                           name="All_HITRAN.txt",
+                                           overwrite=True)
+    simulator.generate()
+    simulator.save() 
+    
+def generate_all_hitran_selection():
+    
+    formulas = os.listdir(HITRAN_Lines)
+    
+    for formula in formulas:
+        try:
+            if ".data" in " ".join(os.listdir(os.path.join(HITRAN_Lines,formula))):
+                    print """[%s]
+    Surface_Ratio  = 1
+    End_Ratio      = None
+    Type           = constant
+    Transition     = None
+    Start_Pressure = None
+    End_Pressure   = None\n"""%formula  
+        except:
+            pass
     
 
 if __name__ == "__main__":
     
 
-    generate_h2_and_more()
-    
+    #generate_h2_and_more()
+    #generate_all_hitran_selection()
+    generate_all_hitran()
     
     
     
