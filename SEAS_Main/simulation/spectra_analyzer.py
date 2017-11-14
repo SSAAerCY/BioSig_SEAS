@@ -55,7 +55,7 @@ class Spectra_Analyzer():
         
         self.user_input = user_input
      
-    def spectra_window(self, nu, coef, type="A",threshold=200.,span=100.,min_signal=0):
+    def spectra_window(self, nu, coef, type="A",threshold=200.,span=100.,min_signal=0,result="nu"):
         
         if type == "A":
         
@@ -121,7 +121,23 @@ class Spectra_Analyzer():
                 for i in window:
                     f.write("%s-%s\n"%(i[0],i[1]))
         
-        return window
+        
+        
+        wav_window = []
+        
+        for win in window[::-1]:
+            low,high = "%.4g"%(10000./win[1]),"%.4g"%(10000./win[0])
+            wav_window.append([low,high])
+        
+        
+        if result == "nu":
+            return window
+        elif result == "wav":
+            return wav_window
+            
+            
+            
+            
 
     def analyze_spectra_detection(self,nu,nu_window,trans,bio_trans,min_signal,method="max",result="bool"):
         """

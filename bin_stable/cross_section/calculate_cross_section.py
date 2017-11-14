@@ -30,10 +30,11 @@ DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import SEAS_Aux.cross_section.cross_section_calculator as csc
-import SEAS_Utils.common_utils.data_plotter as plt
+#import SEAS_Utils.common_utils.data_plotter as plt
 from SEAS_Utils.common_utils.DIRs import Temp_DIR, HITRAN_Water_Lines
 from SEAS_Utils.common_utils.timer import simple_timer
 
+import matplotlib.pyplot as plt
 
 
 def simple_test_inputs():
@@ -126,10 +127,10 @@ if __name__ == "__main__":
     r_path      = Temp_DIR
     molecule    = "H2O"
     component   = [1,1,1]
-    numin       = 3000
-    numax       = 4000
-    step        = 0.1
-    P           = 100000.
+    numin       = 5000
+    numax       = 10000
+    step        = 10
+    P           = 10.
     T           = 300.
     
     calc = csc.cross_section_calculator(d_path,r_path,molecule,component,numin,numax,step,P,T)
@@ -140,7 +141,14 @@ if __name__ == "__main__":
     
     nu, coef = calc.personal_calculator(data)
     
-    plt.simple_plot(nu,coef)
+    k = 1.38*10**-23
+    n = P/(k*T)
+    l = 10000
+    
+    import numpy as np
+    plt.plot(10000./nu,np.exp(-n*coef*l))
+    plt.show()
+    #plt.simple_plot(nu,coef)
 
 
 

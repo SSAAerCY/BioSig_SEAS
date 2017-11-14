@@ -101,6 +101,124 @@ def interpolate_data(x1,y1,x2, Type):
     
     return yinterp
 
+def merge_list(list_d, param=5):
+    """
+    merge similar x in an array
+    
+    """
+    
+    new_list = []
+    compare_list = []
+    tag = []
+    prev = -100
+    begin = True
+    
+    if list_d == []:
+        return []
+    elif len(list_d) == 1:
+        return list_d
+    else:
+        pass
+    
+    for i in list_d:
+        
+        if begin:
+            begin = False
+            prev = i
+            continue
+    
+        compare_list.append(abs(i-prev) <= param)
+        prev = i
+    
+ 
+    
+    for j,id in enumerate(compare_list):
+    
+        if id == True:
+            if tag == []:
+                tag.append(list_d[j])
+                tag.append(list_d[j+1])
+            else:
+                tag.append(list_d[j+1])
+        
+        else:
+            try:
+                value = tag[0]+(tag[-1]-tag[0])/2
+                new_list.append(value)
+            except:
+                new_list.append(list_d[j])
+            tag = []
+    
+    if tag != []:
+        new_list.append(tag[0]+(tag[-1]-tag[0])/2)
+    
+    if compare_list[-1] == False:
+        new_list.append(list_d[-1])
+
+        
+    
+    return new_list
 
 
 
+
+def merge_list_special(list_d, ref,bio,error,param=5):
+    
+    new_list = []
+    compare_list = []
+    tag = []
+    prev = -100
+    begin = True
+    
+    if list_d == []:
+        return []
+    elif len(list_d) == 1:
+        return list_d
+    else:
+        pass
+    
+    for i in list_d:
+        
+        if begin:
+            begin = False
+            prev = i
+            continue
+    
+        compare_list.append(abs(i-prev) <= param)
+        prev = i
+    
+ 
+    
+    for j,id in enumerate(compare_list):
+    
+        if id == True:
+            if tag == []:
+                tag.append(list_d[j])
+                tag.append(list_d[j+1])
+            else:
+                tag.append(list_d[j+1])
+        
+        else:
+            try:
+                value = tag[0]+(tag[-1]-tag[0])/2
+                
+                y1 = np.array(map(ref.__getitem__, tag))
+                y2 = np.array(map(bio.__getitem__, tag))
+                error = np.array(map(error.__getitem__, tag))
+                
+                max_value, max_index = max([(v,i) for i,v in enumerate((y2-y1)/error)])
+                
+                new_list.append(tag[max_index])
+            except:
+                new_list.append(list_d[j])
+            tag = []
+    
+    if tag != []:
+        new_list.append(tag[0]+(tag[-1]-tag[0])/2)
+    
+    if compare_list[-1] == False:
+        new_list.append(list_d[-1])
+
+        
+    
+    return new_list

@@ -158,26 +158,49 @@ def molecule_cross_section_loader2(inputs, db_dir, molecule):
     T_grid = inputs["Simulation_Control"]["T_Grid"]
     P_grid = inputs["Simulation_Control"]["P_Grid"]
 
-    kwargs = {"dir"        :db_dir,
-              "db_name"    :"cross_section_Simulation_%s.db"%molecule,
-              "user"       :"azariven",
-              "DEBUG"      :False,
-              "REMOVE"     :True,
-              "BACKUP"     :False,
-              "OVERWRITE"  :True}
-    
-    cross_db = dbm.database(**kwargs)  
-    cross_db.access_db()  
+    try:
 
-    data = [[0 for y in range(len(T_grid))] for x in range(len(P_grid))]
-    for j,P in enumerate(P_grid):
-        for i,T in enumerate(T_grid):
-            table_name = "T%sP%s"%(i,j)
-            result = cross_db.c.execute("SELECT * FROM {} ORDER BY nu".format(table_name))
-            fetch = np.array(result.fetchall()).T
-            data[j][i] = fetch[1]
-            
-    nu = fetch[0]
+        kwargs = {"dir"        :db_dir,
+                  "db_name"    :"cross_section_Simulation_%s.db"%molecule,
+                  "user"       :"azariven",
+                  "DEBUG"      :False,
+                  "REMOVE"     :True,
+                  "BACKUP"     :False,
+                  "OVERWRITE"  :True}
+        
+        cross_db = dbm.database(**kwargs)  
+        cross_db.access_db()  
+    
+        data = [[0 for y in range(len(T_grid))] for x in range(len(P_grid))]
+        for j,P in enumerate(P_grid):
+            for i,T in enumerate(T_grid):
+                table_name = "T%sP%s"%(i,j)
+                result = cross_db.c.execute("SELECT * FROM {} ORDER BY nu".format(table_name))
+                fetch = np.array(result.fetchall()).T
+                data[j][i] = fetch[1]
+                
+        nu = fetch[0]
+    except:
+        kwargs = {"dir"        :db_dir,
+                  "db_name"    :"cross_section_Simulation_%s.db"%("N2"),
+                  "user"       :"azariven",
+                  "DEBUG"      :False,
+                  "REMOVE"     :True,
+                  "BACKUP"     :False,
+                  "OVERWRITE"  :True}
+        
+        cross_db = dbm.database(**kwargs)  
+        cross_db.access_db()  
+    
+        data = [[0 for y in range(len(T_grid))] for x in range(len(P_grid))]
+        for j,P in enumerate(P_grid):
+            for i,T in enumerate(T_grid):
+                table_name = "T%sP%s"%(i,j)
+                result = cross_db.c.execute("SELECT * FROM {} ORDER BY nu".format(table_name))
+                fetch = np.array(result.fetchall()).T
+                data[j][i] = fetch[1]
+                
+        nu = fetch[0]
 
     
     return nu, data
@@ -230,6 +253,39 @@ def HITRAN_Line_List_reference():
         
     return molecule,component
 
+def ASM_Smile_List(expect="All"):
+
+
+    kwargs = {"db_name":"Molecule_DB.db",
+              "user":"azariven",
+              "dir":"../../input/molecule_info",
+              "DEBUG":False,"REMOVE":False,"BACKUP":False,"OVERWRITE":False}
+    
+    cross_db = dbm.database(**kwargs)   
+    cross_db.access_db()   
+    
+    cmd = 'SELECT SMILES, InChiKey, InChi, Formula, IUPAC_chemical_name FROM ID'
+    
+    result = cross_db.c.execute(cmd)
+    data = np.array(result.fetchall()).T
+
+    smiles = data[0]
+    inchikeys = data[1]
+    CAS = data[2]
+    formula = data[3]
+    name = data[4]
+    
+    if expect == "All":
+        return smiles, inchikeys,CAS,formula,name
+    elif expect == "Smiles":
+        return smiles
+    elif expect == "Inchikey":
+        return inchikeys
+    elif expect == "CAS":
+        return CAS
+    else:
+        print "Unknown NIST output data type, Simulation Terminated"
+        sys.exit()
 
 
 def NIST_Smile_List(expect="All"):
@@ -243,7 +299,7 @@ def NIST_Smile_List(expect="All"):
     cross_db = dbm.database(**kwargs)   
     cross_db.access_db()   
     
-    cmd = 'SELECT ID.SMILES, ID.InChiKey, Spectra.CAS, ID.Formula FROM ID,Spectra WHERE ID.SMILES=Spectra.Smiles AND Spectra.Is_Gas="Y"'
+    cmd = 'SELECT ID.SMILES, ID.InChiKey, Spectra.CAS, ID.Formula, ID.IUPAC_chemical_name FROM ID,Spectra WHERE ID.SMILES=Spectra.Smiles AND Spectra.Is_Gas="Y"'
     
     result = cross_db.c.execute(cmd)
     data = np.array(result.fetchall()).T
@@ -252,9 +308,10 @@ def NIST_Smile_List(expect="All"):
     inchikeys = data[1]
     CAS = data[2]
     formula = data[3]
+    name = data[4]
     
     if expect == "All":
-        return smiles, inchikeys,CAS,formula
+        return smiles, inchikeys,CAS,formula,name
     elif expect == "Smiles":
         return smiles
     elif expect == "Inchikey":
@@ -265,9 +322,55 @@ def NIST_Smile_List(expect="All"):
         print "Unknown NIST output data type, Simulation Terminated"
         sys.exit()
 
+def HITRAN_to_NIST(molecule, result="Smiles"):
+        
+    if result == "Formula":
+        
+        if molecule in ["C4H2", "ClO", "ClONO2", "CS", "H2", "H2O2", 
+                         "HF", "HI", "HNO3", "HO2", "HOBr", "HOCl", 
+                         "N2", "NO+", "NO2", "O", "O2", "OH", "SO3"]:
+            print molecule, " Not in NIST DB"
+            return ""
+        
+        elif molecule in ["C2H2", "C2H4", "C2H6", "CF4","CH3Br", "CH3Cl", "CH4", 
+                          "CO", "CO2", "H2O", "H2S", "N2O",  "NO",  "O3"]:
+            return molecule
+        
+        elif molecule in ["CH3CN","CH3OH","COF2","H2CO","HBr","HC3N","HCl","HCN",
+                           "HCOOH","NH3","OCS","PH3","SF6","SO2"]:
+            reference = {"CH3CN":"C2H3N", "CH3OH":"CH4O", "COF2":"CF2O", 
+                         "H2CO":"CH2O","HBr":"BrH", "HC3N":"C3HN", "HCl":"ClH", 
+                         "HCN":"CHN", "HCOOH":"CH2O2", "NH3":"H3N","OCS":"COS", 
+                         "PH3":"H3P", "SF6":"F6S", "SO2":"O2S"}
+            
+            return reference[molecule] 
+                          
+    elif result == "Smiles":
+        
+        formula = HITRAN_to_NIST(molecule, result="Formula")
+        
+        info = NIST_Smile_List()
+        
+        return info[0][list(info[3]).index(formula)]
+    
+    else:
+        print "unrecognized key, please put 'Smiles' or 'Formula'"
+    
 
-
-
+def NIST_to_HITRAN(molecule,result="Formula"): 
+    
+    if molecule in ["C2H2", "C2H4", "C2H6", "CF4","CH3Br", "CH3Cl", "CH4", 
+                          "CO", "CO2", "H2O", "H2S", "N2O",  "NO",  "O3"]:
+        return molecule
+    
+    elif molecule in ['F6S', 'CF2O', 'CH4O', 'O2S', 'H3N', 'H3P', 'COS', 
+                      'CHN', 'C3HN', 'CH2O2', 'C2H3N', 'CH2O', 'ClH', 'BrH']:
+        reference = {'COS': 'OCS', 'CH2O2': 'HCOOH', 'ClH': 'HCl', 'H3N': 'NH3', 'O2S': 'SO2', 
+                     'CH4O': 'CH3OH', 'CH2O': 'H2CO', 'H3P': 'PH3', 'C2H3N': 'CH3CN', 'CHN': 'HCN', 
+                     'CF2O': 'COF2', 'BrH': 'HBr', 'C3HN': 'HC3N', 'F6S': 'SF6'}
+        return reference[molecule] 
+        
+    
 class Excel_Loader():
     
     def __init__(self, path, name, sheetname="sheet"):

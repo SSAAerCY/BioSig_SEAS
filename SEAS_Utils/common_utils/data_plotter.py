@@ -134,6 +134,10 @@ class Simulation_Plotter():
         plt.ylabel(self.y_label)
         plt.title(self.Title)
         
+    def plot_dot(self,x,y):
+        
+        plt.plot(x,y*self.y_multi,"*")
+        
     def plot_xy(self, x, y, Label="Data", Color = "", Dtype="wn"):
         """
         assuming input is in wn... otherwise is um

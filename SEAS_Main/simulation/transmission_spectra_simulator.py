@@ -263,7 +263,7 @@ class TS_Simulator():
 
     def interpolate_CIA(self):
         
-        print self.normalized_temperature
+        #print self.normalized_temperature
         
         normalized_CIA = []
         for i in self.CIA_File:
@@ -444,7 +444,9 @@ class TS_Simulator():
                     y1new.append(1)
                 else:
                     y1new.append(i)
-            y1 = y1new        
+            y1 = y1new     
+            
+               
     
             # these params are a bit wavy ... need a formal analysis for each spectra?
             # and comparision with known spectra
@@ -757,12 +759,72 @@ class TS_Simulator():
                 # assuming only 1% of all molecules condense out...
                 Total_xsec += xsec*condense
             
+          
             normalized_xsec = biosig_interpolate(10000./np.array(wavelength[:294],dtype=float),np.array(Total_xsec,dtype=float),self.nu,"C")
             self.normalized_cloud_xsec.append(normalized_xsec)
             
         return self.normalized_cloud_xsec
     
+    def calculate_gabi_cloud_xsec(self):
+        
+        
 
+        
+        particle      = self.user_input["Atmosphere_Effects"]["Cloud"]["particle"]["name"]
+        partical_VMR  = float(self.user_input["Atmosphere_Effects"]["Cloud"]["particle"]["VMR"])
+        solid_density = float(self.user_input["Atmosphere_Effects"]["Cloud"]["particle"]["solid_density"])
+        condense      = float(self.user_input["Atmosphere_Effects"]["Cloud"]["particle"]["condense"])
+        
+        dist_type = self.user_input["Atmosphere_Effects"]["Cloud"]["distribution"]["type"]
+        mean      = float(self.user_input["Atmosphere_Effects"]["Cloud"]["distribution"]["mean"])
+        stdev     = float(self.user_input["Atmosphere_Effects"]["Cloud"]["distribution"]["stdev"])
+    
+        self.normalized_cloud_xsec = []
+        for i,P in enumerate(self.normalized_pressure):
+            T = self.normalized_temperature[i]
+            
+            air_density = P/(BoltK*T)/AvoR*29/100**3 #g/cm^3
+            particle_density = air_density*partical_VMR # g of zns in /cm^3
+            total_unit_mass = particle_density*1
+            
+            radrange = []
+
+            while True:
+                particle_radius = float("%.2f"%np.random.lognormal(mean, stdev)) #cm
+                unit_particle_mass = solid_density*4/3*np.pi*(particle_radius*10**-4)**3 #g
+            
+                total_unit_mass -= unit_particle_mass
+                if total_unit_mass <0:
+                    break
+                radrange.append(particle_radius)
+            
+            if len(radrange) == 0:
+                self.normalized_cloud_xsec.append(np.zeros(len(self.nu)))
+        
+        
+            wavelength = np.arange(0.9,2.1,0.1)
+            
+            nlist = np.ones(len(wavelength))*self.cloudn
+            klist = np.ones(len(wavelength))*self.cloudk
+        
+        
+            Simulator = Physical_Cloud_Simulator(wavelength,radrange)
+            ZnS_abs,ZnS_sca,ZnS_qext,ZnS_x = Simulator.spect(nlist,klist)
+            ZnS_cross = Simulator.GetSigma(ZnS_qext,unit="cm")
+            
+            Total_xsec = np.zeros(len(wavelength))
+            for xsec in ZnS_cross.T:
+                # assuming only 1% of all molecules condense out...
+                Total_xsec += xsec*condense
+            
+            
+            normalized_xsec = biosig_interpolate(10000./np.array(wavelength,dtype=float),np.array(Total_xsec,dtype=float),self.nu,"C")
+            self.normalized_cloud_xsec.append(normalized_xsec)
+        
+        
+        return self.normalized_cloud_xsec
+
+    
     
     def load_atmosphere_geometry_model(self, bio=False, CIA=False, Rayleigh=True, Cloud=False,
                                                   result="Trans"):
@@ -780,7 +842,8 @@ class TS_Simulator():
         if Cloud:
             cloud_model = self.user_input["Atmosphere_Effects"]["Cloud"]["model"]
             normalized_cloud_xsec = self.calculate_cloud_cross_section()
-            
+            normalized_cloud_xsec = self.calculate_gabi_cloud_xsec()
+        
         if Rayleigh:
             normalized_rayleigh      = self.normalized_rayleigh        
 
