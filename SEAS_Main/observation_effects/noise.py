@@ -28,7 +28,14 @@ or ... stuff.
 What exactly is JWST Pandexo simulation doing anyway?
 
 """
+import os
+import sys
 import numpy as np
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
+from SEAS_Utils.common_utils.constants import *
 
 
 def convolve_spectra():
@@ -74,8 +81,89 @@ class Shot_Noise(Poisson_Noise):
         
 class Photon_Noise():
     
-    def __init__(self):
-        pass
+    def __init__(self, user_input):
+        
+        self.user_input = user_input
+
+
+    def blackbody_lam(self, wav, T):
+        """ Blackbody as a function of wavelength (m) and temperature (K).
+        returns units of erg/s/cm^2/cm/Steradian
+        """
+        a = 2*HPlanck*CLight**2
+        b = HPlanck*CLight/(wav*BoltK*T)
+        intensity = a/((wav**5)*(np.exp(b)-1.0))
+        return intensity
+
+    def calculate_noise(self,lam=10**-6,bin=10*10**-9):
+    
+        R_Star       = self.user_input["Star"]["R_Star"]
+        R_planet     = self.user_input["Planet"]["R_Planet"] 
+        R_obs        = self.user_input["Telescope"]["Aperture"]
+        R_atmosphere = self.user_input["Planet"]["R_Atmosphere"]
+        Distance     = self.user_input["Telescope"]["Distance"]
+        Duration     = self.user_input["Telescope"]["Duration"]
+        Quantum      = self.user_input["Telescope"]["Quantum_Efficiency"]
+        T_Star       = self.user_input["Star"]["T"]
+        Noise_M      = self.user_input["Observation_Effects"]["Noise"]["Multiplier"]
+        
+        # calculate number of photons 
+        B_Body = self.blackbody_lam(lam, T_Star)
+        Bin_width = bin 
+        A_Star = np.pi*R_Star**2
+        Psi_Tele = np.pi*R_obs**2/Distance**2
+        E_Total = B_Body*Bin_width*A_Star*Psi_Tele*Duration
+        num_photon = (E_Total*lam)/(HPlanck*c)*Quantum
+        
+        
+        fp = (2*R_planet*R_atmosphere)/R_Star**2
+        # calculate photon noise
+        photon_noise = Noise_M/np.sqrt(num_photon)
+        #transmission_noise = R_Star**2/(2*R_planet*R_atmosphere)*photon_noise#*10**6
+        
+        return photon_noise
+    
+    
+    def determine_bin(self):
+    
+        lambda_init    = self.user_input["Telescope"]["min_wavelength"]
+        lambda_max     = self.user_input["Telescope"]["max_wavelength"]
+        bin_width_init = self.user_input["Observation_Effects"]["bin_width"]
+        bin_exponent   = self.user_input["Observation_Effects"]["bin_exponent"]
+        
+        bin_edges,bin_width,bin_centers,error_bar = [],[],[],[]
+        
+        i=0
+        lambda_current = lambda_init
+        bin_edges.append(lambda_current)
+        while True:
+            
+            new_bin_width = bin_width_init*(lambda_current/lambda_init)**(bin_exponent)
+            
+            lambda_center = lambda_current+0.5*new_bin_width
+            lambda_current += new_bin_width
+            
+            if lambda_center > lambda_max:
+                print i
+                break
+            bin_edges.append(lambda_current)
+            bin_centers.append(lambda_center)
+            bin_width.append(new_bin_width)
+            noise = self.calculate_noise(lambda_center*10**-6,new_bin_width*10**-6)
+            error_bar.append(noise)
+            
+            print lambda_center, new_bin_width, noise*10**6
+            
+            i+=1
+            
+        return bin_edges, bin_width, bin_centers, error_bar
+
+
+
+
+
+
+
 
 
 class Gaussian_Noise(Noise):

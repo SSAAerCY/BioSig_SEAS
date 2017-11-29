@@ -184,6 +184,8 @@ class Simulation_Plotter():
     def plot_bin(self,bin_centers, error_I, error_bar):
         
         
+        print error_bar[0]*self.y_multi
+        #sys.exit()
         
         plt.errorbar(bin_centers, error_I*self.y_multi, xerr=0, yerr=error_bar*self.y_multi, fmt='o',linewidth=2.0)
 

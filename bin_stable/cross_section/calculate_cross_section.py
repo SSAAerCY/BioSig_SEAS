@@ -127,11 +127,11 @@ if __name__ == "__main__":
     r_path      = Temp_DIR
     molecule    = "H2O"
     component   = [1,1,1]
-    numin       = 5000
-    numax       = 10000
+    numin       = 4000
+    numax       = 11000
     step        = 10
     P           = 10.
-    T           = 300.
+    T           = 500.
     
     calc = csc.cross_section_calculator(d_path,r_path,molecule,component,numin,numax,step,P,T)
     
@@ -140,14 +140,32 @@ if __name__ == "__main__":
     data = calc.read_data()
     
     nu, coef = calc.personal_calculator(data)
+    wav = 10000./nu
+    
+    
     
     k = 1.38*10**-23
     n = P/(k*T)
-    l = 10000
+    l = (2*3.14*15320*1000*200*1000)**0.5
     
+    print l
     import numpy as np
-    plt.plot(10000./nu,np.exp(-n*coef*l))
-    plt.show()
+    
+    from scipy import stats
+    trans = np.exp(-n*coef*l)
+    bin_means, bin_edges, binnumber = stats.binned_statistic(wav, trans, bins=500)
+    bin_width = (bin_edges[1] - bin_edges[0])
+    bin_centers = bin_edges[1:] - bin_width/2
+
+    np.save("temp.txt",[bin_centers,bin_means])
+    
+    data = np.load("temp.txt")
+    bin_centers, bin_means = data
+
+
+    #plt.plot(bin_centers,bin_means)
+    #plt.plot(10000./nu,np.exp(-n*coef*l))
+    #plt.show()
     #plt.simple_plot(nu,coef)
 
 

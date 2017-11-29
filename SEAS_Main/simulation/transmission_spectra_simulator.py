@@ -842,7 +842,7 @@ class TS_Simulator():
         if Cloud:
             cloud_model = self.user_input["Atmosphere_Effects"]["Cloud"]["model"]
             normalized_cloud_xsec = self.calculate_cloud_cross_section()
-            normalized_cloud_xsec = self.calculate_gabi_cloud_xsec()
+            #normalized_cloud_xsec = self.calculate_gabi_cloud_xsec()
         
         if Rayleigh:
             normalized_rayleigh      = self.normalized_rayleigh        
@@ -868,6 +868,7 @@ class TS_Simulator():
         Offset = float(self.user_input["Atmosphere_Effects"]["Base_Line"]["offset"])
         Total_Transit_Signal = np.ones(len(self.nu))*(self.Base_TS_Value+Offset)
         Total_Height = np.ones(len(self.nu))*self.R_planet
+        Atmosphere_Height = np.zeros(len(self.nu))
         base_layer = self.R_planet
         
         for i in range(TotalBeams):
@@ -972,7 +973,9 @@ class TS_Simulator():
             
             elif result == "Height":
                 BeamTrans = calc.calc_transmittance(BeamTau) 
-                Total_Height += (1-BeamTrans)*normalized_scale_height[i]
+                effective_height = (1-BeamTrans)*normalized_scale_height[i]
+                Total_Height += effective_height
+                Atmosphere_Height += effective_height
             
             
             # update to the next beam up
@@ -996,6 +999,8 @@ class TS_Simulator():
         elif result == "Absorp":
             Raw_Transit_Signal = Total_Tau
         elif result == "Height":
+            return Atmosphere_Height
+        elif result == "R/Rp":
             return Total_Height/R_Earth
         
         return Raw_Transit_Signal             
