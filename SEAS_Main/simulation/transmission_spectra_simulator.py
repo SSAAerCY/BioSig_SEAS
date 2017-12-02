@@ -58,7 +58,6 @@ from SEAS_Utils.common_utils.timer import simple_timer
 from SEAS_Utils.common_utils.data_saver import check_file_exist, check_path_exist
 import SEAS_Utils.common_utils.db_management2 as dbm
 
-
 class TS_Simulator():
     """
     This is the main class for the planet transmission spectra simulation.
@@ -672,14 +671,53 @@ class TS_Simulator():
         return [normalized_bio_molecule_xsec]
 
 
-    def load_cloud_model(self):
-        """
-        should cloud be a model or an effect?
-        clouds are due to condensates.... 
-        I need to know more cloud stuff
-        """
-        pass
 
+    def calculate_mie_cloud_cross_section(self):
+        """
+        multiple particulates
+        particulate distribution function... 
+        for now assuming a e^-i where i is pressure layer
+        
+        """
+
+        particulate = self.user_input["Atmosphere_Effects"]["Cloud"]["Particulate"]["name"]
+        sample      = self.user_input["Atmosphere_Effects"]["Cloud"]["Particulate"]["average"]
+        mean        = self.user_input["Atmosphere_Effects"]["Cloud"]["particle distribution"]["mean"]
+        stdev       = self.user_input["Atmosphere_Effects"]["Cloud"]["particle distribution"]["stdev"]
+        output      = self.user_input["Atmosphere_Effects"]["Cloud"]["result"]["output"]
+        vmr_type    = self.user_input["Atmosphere_Effects"]["Cloud"]["particle distribution"]["type"]
+        vmr_scale   = self.user_input["Atmosphere_Effects"]["Cloud"]["particle distribution"]["scale"]
+        
+        
+        partical, source, filename = Particulate_Info_Loader(particulate)
+        
+        filepath = os.path.join(Aerosol_Data,source,filename)
+        
+        info = load_particulates(filepath,output)
+
+        cloud = Physical_Cloud_Simulator_2(sample,mean,stdev)
+
+        lam,sigmas = cloud.calculate_cloud_xsec(info)
+
+        normalized_xsec = biosig_interpolate(10000./np.array(lam,dtype=float),np.array(sigmas,dtype=float),self.nu,"C")
+
+        self.normalized_cloud_xsec = []
+        for i,P in enumerate(self.normalized_pressure):
+            
+            if vmr_type == "log":
+                self.normalized_cloud_xsec.append(normalized_xsec*np.e**(-i*vmr_scale))
+            elif vmr_type == "iso":
+                self.normalized_cloud_xsec.append(normalized_xsec)
+            elif vmr_type == "linear":
+                l = len(self.normalized_pressure)
+                param = (l-i*vmr_scale)/l
+                if param < 0:
+                    param = 0
+                self.normalized_cloud_xsec.append(normalized_xsec*param)
+            elif vmr_type == "file":
+                pass
+        return self.normalized_cloud_xsec            
+            
 
     def calculate_cloud_cross_section(self):
 

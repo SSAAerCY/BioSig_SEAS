@@ -109,59 +109,82 @@ def simulate_anoxic(s,o,a):
         s.user_input["Atmosphere_Effects"]["CIA"]["enable"] = True
         s.CIA_File, s.CIA_Data = s.load_CIA(["H2"])
         s.normalized_CIA = s.interpolate_CIA()
-        s.Reference_Transit_Signal = s.load_atmosphere_geometry_model(CIA=True)
-        s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable,CIA=True)
+        s.Reference_Transit_Signal = s.load_atmosphere_geometry_model(CIA=True,result="Height")
+        s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable,CIA=True,result="Height")
     else:
-        s.Reference_Transit_Signal = s.load_atmosphere_geometry_model()
-        s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable)
+        s.Reference_Transit_Signal = s.load_atmosphere_geometry_model(result="Height")
+        s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable,result="Height")
     
     # calculate observed transmission spectra
     nu,ref_trans = o.calculate_convolve(s.nu, s.Reference_Transit_Signal)
     nu,bio_trans = o.calculate_convolve(s.nu, s.Bio_Transit_Signal)
     
     # analyze the spectra
-    s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
+    #s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
+    
+    Window_Threshold = utils.to_float(s.user_input["Observation_Effects"]["Atmosphere_Window"]["threshold"])
+    Window_Span = utils.to_float(s.user_input["Observation_Effects"]["Atmosphere_Window"]["span"])
+    s.nu_window,thres = a.new_spectra_window(nu,ref_trans,Window_Threshold,Window_Span,"nu",thres=True)
+    
+
     
     
     s.user_input["Plotting"]["Figure"]["Title"] = "Transit Signal and Atmospheric Window for Simulated %s with traces of %s at %s ppm"%(s.user_input["Title_name"],bio_molecule,bio_abundance*10**6)
     s.user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
     s.user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
+
+    s.user_input["Plotting"]["Figure"]["Title"] = "Atmosphere Height and Atmospheric Window for Simulated %s with traces of %s at %s ppm"%(s.user_input["Title_name"],bio_molecule,bio_abundance*10**6)
+    s.user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
+    s.user_input["Plotting"]["Figure"]["y_label"] = r"Atmosphere Height (m)"   
     
     
-    print sum(s.normalized_scale_height)
-    
-    s.user_input["Star"]["R_Star"] = 0.6*R_Sun
+    s.user_input["Star"]["R_Star"] = 0.6
     s.user_input["Star"]["T"] = 4000.
-    s.user_input["Planet"]["R_Planet"] = 1*R_Earth
-    s.user_input["Planet"]["R_Atmosphere"] = 200*1000
+    s.user_input["Planet"]["R_Planet"] = 1
+    #s.user_input["Planet"]["R_Atmosphere"] = 40*1000
     s.user_input["Telescope"]["Aperture"] = 6.5
     s.user_input["Telescope"]["Distance"] = 10*Psec
-    s.user_input["Telescope"]["Duration"] = 200*3600
-    s.user_input["Telescope"]["Quantum_Efficiency"] = 1
+    s.user_input["Telescope"]["Duration"] = 100*3600
+    s.user_input["Telescope"]["Quantum_Efficiency"] = 0.3
     s.user_input["Telescope"]["min_wavelength"] = 1
     s.user_input["Telescope"]["max_wavelength"] = 25
     s.user_input["Observation_Effects"]["Noise"]["Multiplier"] = 1.2
     s.user_input["Observation_Effects"]["bin_exponent"] = 3/2.
-    s.user_input["Observation_Effects"]["bin_width"] = 0.05
-    
+    s.user_input["Observation_Effects"]["bin_width"] = 0.01
+
+
+    s.user_input["Plotting"]["Figure"]["y_multiplier"] = 1
     
     noise = Photon_Noise(s.user_input)
-    
-    
-    bin_edges, bin_width, bin_centers, error_bar = noise.determine_bin()
-    
-    bin_means, bin_edges, binnumber = stats.binned_statistic(10000./nu[::-1], bio_trans[::-1], bins=bin_edges)
 
-    bin_centers = np.array(bin_centers)
-    bin_means = np.array(bin_means)
-    error_bar = np.array(error_bar)
+    diff = np.array(s.Bio_Transit_Signal)-np.array(s.Reference_Transit_Signal)
+    print diff
+
+    bin_edges, bin_width, bin_centers = noise.determine_bin()    
     
+    bin_means_bio, bin_edges_bio, binnumber_bio = stats.binned_statistic(10000./s.nu[::-1], s.Bio_Transit_Signal[::-1], bins=bin_edges)
+    
+    bin_means, bin_edges, binnumber = stats.binned_statistic(10000./s.nu[::-1], diff[::-1], bins=bin_edges)
+
+    new_bin_means = []
+    for i,info in enumerate(bin_means):
+        if float(info) < 0:
+            new_bin_means.append(0)
+        else:
+            new_bin_means.append(info)
+    bin_means = np.array(new_bin_means)    
+
+
+    signal, photon_noise, SNR = noise.calculate_noise(bin_means)
 
     sim_plot = plotter.Simulation_Plotter(s.user_input)
     
+    sim_plot.plot_hline(thres[0][0],[thres[0][1],thres[0][2]],"Threshold")
+    sim_plot.plot_hline(thres[1][0],[thres[1][1],thres[1][2]],"Threshold")
+    sim_plot.plot_hline(thres[2][0],[thres[2][1],thres[2][2]],"Threshold")
     
-    sim_plot.plot_bin(bin_centers, bin_means, error_bar)
-    
+    sim_plot.plot_bin(bin_centers, bin_means_bio, photon_noise)
+    #sim_plot.plot_xy(bin_centers,bin_means_bio)
     
     
     plt_ref_1 = sim_plot.plot_xy(nu,bio_trans,"with_bio")
@@ -170,26 +193,28 @@ def simulate_anoxic(s,o,a):
     
     
     sim_plot.plot_window(s.nu_window,"k", 0.2)
-    sim_plot.set_legend([plt_ref_1, plt_ref_2])
+    #sim_plot.set_legend([plt_ref_1, plt_ref_2])
     
     if utils.to_bool(s.user_input["Save"]["Plot"]["save"]):
         sim_plot.save_plot()
     else:
         sim_plot.show_plot()
     
-    sys.exit()
+
     return s
 
-def simulation_prep(atmosphere,type="File"):
+def simulation_prep(name, atmosphere,type="File"):
     
     
     if type == "File":
-        Filename = "Test_Earth"
+        Filename = name
         Molecules = atmosphere["Molecules"]
         MRFile = atmosphere["Mixing_Ratio_File"]
         TPFile = atmosphere["TP_File"]
+        Window_Threshold = 0.3
+        Window_Span = 100
         
-        return Filename, Molecules, TPFile, MRFile
+        return Filename, Filename, Molecules, TPFile, MRFile, Window_Threshold,Window_Span
 
 
     elif type == "Half":
@@ -198,7 +223,10 @@ def simulation_prep(atmosphere,type="File"):
         Mixing_Raio         = atmosphere["Ratio"]
         Filler              = atmosphere["Filler"]
         TP_Name             = atmosphere["TP_File"]
-        Filename = "_".join([Type[:3],"_".join(Molecules),str(hash(str(atmosphere.values()))%10**8)])
+        Window_Threshold    = atmosphere["Window_Threshold"]
+        Window_Span         = atmosphere["Window_Span"]
+        Simple_Filename = "_".join([Type[:3],"_".join(Molecules),name])
+        Complex_Filename = "_".join([Type[:3],"_".join(Molecules),str(hash(str(atmosphere.values()))%10**8)])
         
         
         # generate Mixing Ratio Files
@@ -212,7 +240,7 @@ def simulation_prep(atmosphere,type="File"):
             ratio_input[m]["Start_Pressure"] = None
             ratio_input[m]["End_Pressure"]   = None 
         
-        MR_Name = "MR_%s.txt"%Filename
+        MR_Name = "MR_%s.txt"%Complex_Filename
         if not os.path.isfile(os.path.join(Mixing_Ratio_Data,MR_Name)):
             simulator = mix.mixing_ratio_generator(ratio_input,
                                                    filler=True,
@@ -228,16 +256,21 @@ def simulation_prep(atmosphere,type="File"):
         Surface_Temperature = atmosphere["Surface_Temperature"]
         Molecules           = atmosphere["Molecules"]
         Mixing_Raio         = atmosphere["Ratio"]
-        
+        Simple_Filename = "_".join([Type[:3],"_".join(Molecules),name])
+        Complex_Filename = "_".join([Type[:3],"_".join(Molecules),str(hash(str(atmosphere.values()))%10**8)])
+        Window_Threshold = 0.3
+        Window_Span = 100
+                
         try:
             Filler = atmosphere["Filler"]
         except:
             Filler = "N2"
-        Filename = "_".join([Type[:3],"_".join(Molecules),str(hash(str(atmosphere.values()))%10**8)])
+        Simple_Filename = "_".join([Type[:3],"_".join(Molecules),name])
+        Complex_Filename = "_".join([Type[:3],"_".join(Molecules),str(hash(str(atmosphere.values()))%10**8)])
         
         if Type == "isothermal":
             TP_input = config.Configuration("../../bin_stable/TP_Profile/TP_selection.cfg")["Test Isothermal Atmosphere"]
-            TP_Name = "TP_%s.txt"%Filename
+            TP_Name = "TP_%s.txt"%Complex_Filename
             if not os.path.isfile(os.path.join(TP_Profile_Data,TP_Name)):
                 TP_simulator = TPgen.temperature_pressure_profile_generator(TP_input, name=TP_Name)
                 TP_simulator.generate()
@@ -257,7 +290,7 @@ def simulation_prep(atmosphere,type="File"):
             ratio_input[m]["Start_Pressure"] = None
             ratio_input[m]["End_Pressure"]   = None 
         
-        MR_Name = "MR_%s.txt"%Filename
+        MR_Name = "MR_%s.txt"%Complex_Filename
         if not os.path.isfile(os.path.join(Mixing_Ratio_Data,MR_Name)):
             simulator = mix.mixing_ratio_generator(ratio_input,
                                                    filler=True,
@@ -268,7 +301,7 @@ def simulation_prep(atmosphere,type="File"):
             simulator.generate()
             simulator.save()
 
-    return Filename, Molecules,TP_Name, MR_Name
+    return Simple_Filename, Complex_Filename, Molecules,TP_Name, MR_Name, Window_Threshold, Window_Span
 
 def setup_simulation():
 
@@ -278,12 +311,12 @@ def setup_simulation():
 
     
     atmo_input = config.Configuration("../../bin_stable/a.Main/atmosphere_prototype.cfg")
-    atmosphere_types = atmo_input["Realistic"]
+    atmosphere_types = atmo_input["Proposed"]
     
     for i, atmosphere in enumerate(atmosphere_types):
     
-        Filename, Molecules, TP_Name, MR_Name = simulation_prep(atmosphere_types[atmosphere],"File")
-        print Filename, Molecules, TP_Name, MR_Name
+        Simple_Filename, Complex_Filename, Molecules, TP_Name, MR_Name, Window_Threshold, Window_Span = simulation_prep(atmosphere, atmosphere_types[atmosphere],"Half")
+        print Simple_Filename, Molecules, TP_Name, MR_Name
     
         user_input["Title_name"] = atmosphere
     
@@ -292,7 +325,7 @@ def setup_simulation():
         user_input["Simulation_Control"]["TP_Profile_Name"]     = TP_Name
         user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = MR_Name
     
-        user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "%s_Cross_Section.npy"%Filename
+        user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "%s_Cross_Section.npy"%Simple_Filename
         
         info = NIST_Smile_List()
         molecule_smiles = info[0]
@@ -306,6 +339,10 @@ def setup_simulation():
         user_input["Atmosphere_Effects"]["Bio_Molecule"]["is_smile"] = True
         
         user_input["Atmosphere_Effects"]["Overlay"]["enable"] = True
+        
+        user_input["Observation_Effects"]["Atmosphere_Window"]["enable"] = True
+        user_input["Observation_Effects"]["Atmosphere_Window"]["threshold"] = Window_Threshold
+        user_input["Observation_Effects"]["Atmosphere_Window"]["span"] = Window_Span
         
         simulation = theory.TS_Simulator(user_input)
         observer   = observe.OS_Simulator(user_input)

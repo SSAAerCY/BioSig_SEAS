@@ -39,11 +39,9 @@ import SEAS_Utils.common_utils.jdx_Reader as jdx
 
 from SEAS_Utils.common_utils.data_saver import check_path_exist, check_file_exist
 from SEAS_Main.atmosphere_effects.biosig_molecule import biosig_interpolate
+from SEAS_Utils.common_utils.DIRs import molecule_info
+from SEAS_Utils.common_utils.data_saver import Excel_Saver
 
-
-
-def window_loader(path, spliter=None, typer="float", skip=0):
-    pass
 
 
 def two_column_file_loader(path,spliter=None,type="float",skip=0, skipper="#", seeker="null"):
@@ -123,6 +121,40 @@ def load_npy(savepath, savename):
     else:
         print "File %s Does not exist"%save
         return []
+
+
+class Excel_Loader():
+    
+    def __init__(self, path, name, sheetname="sheet"):
+        
+        #check_path_exist(path)
+        #check_file_exist
+        
+        self.path = path
+        self.name = name
+        self.sheetname = sheetname
+        
+        self.file = os.path.join(self.path,self.name)
+        
+    
+    def create(self):
+        
+        self.WBI = Workbook()
+    
+    
+    def load(self):
+        
+        self.WBI = load_workbook(self.file)
+        input_data = self.WBI[self.sheetname]
+        
+
+class database_loader():
+    "TBD, keep this here."
+    
+    def __init__(self):
+        
+        pass
+        
 
 
 def molecule_cross_section_loader(inputs, cross_db, molecule):
@@ -369,39 +401,74 @@ def NIST_to_HITRAN(molecule,result="Formula"):
                      'CH4O': 'CH3OH', 'CH2O': 'H2CO', 'H3P': 'PH3', 'C2H3N': 'CH3CN', 'CHN': 'HCN', 
                      'CF2O': 'COF2', 'BrH': 'HBr', 'C3HN': 'HC3N', 'F6S': 'SF6'}
         return reference[molecule] 
-        
     
-class Excel_Loader():
-    
-    def __init__(self, path, name, sheetname="sheet"):
-        
-        #check_path_exist(path)
-        #check_file_exist
-        
-        self.path = path
-        self.name = name
-        self.sheetname = sheetname
-        
-        self.file = os.path.join(self.path,self.name)
-        
-    
-    def create(self):
-        
-        self.WBI = Workbook()
-    
-    
-    def load(self):
-        
-        self.WBI = load_workbook(self.file)
-        input_data = self.WBI[self.sheetname]
-        
 
-class database_loader():
-    "TBD, keep this here."
+def Particulate_Info_Loader(particulate):
     
-    def __init__(self):
+    
+
+    WB = Excel_Saver(molecule_info,"Particulate_List.xlsx")
+    info = WB.load_sheet("Particulates",False)
+
+    num = 2
+    
+    result = []
+    while True:
         
-        pass
+        partical = info["A%s"%(num)].value
+        source   = info["B%s"%(num)].value
+        filename = info["C%s"%(num)].value
         
+        if partical == None:
+            break
+        
+        if partical == particulate.lower():
+            return partical, source, filename
+
+
+        num+=1
+    
+    return None,None,None
+
+def load_particulates(filename,output="wave"):
+
+    if ".nc" in filename:
+        
+        from scipy.io import netcdf
+
+        info = netcdf.netcdf_file(filename, 'r')
+        
+        text = info.variables["text"].data
+        ri   = info.variables["ri"].data
+        rn   = info.variables["rn"].data
+        wave = info.variables["wavelength"].data
+        wcm  = info.variables["wcm"].data
+        lenx = info.variables["nlines"].data
+        
+        info.close()
+    
+        new_x = []
+        new_rn = []
+        new_ri = []
+        
+        if output=="wave":
+            for i,dat in enumerate(wave):
+                if dat >= 25:
+                    break
+                new_x.append(wave[i])
+                new_rn.append(rn[i])
+                new_ri.append(ri[i])
+                
+        if output=="wcm":
+            for i,dat in enumerate(wcm):
+                print dat
+                if dat <= 500:
+                    break
+                new_x.append(wcm[i])
+                new_rn.append(rn[i])
+                new_ri.append(ri[i])
+                    
+        return new_x,new_rn,new_ri
+
 
 

@@ -17,9 +17,7 @@
 
 """
 
-Generate a List of atmospheres and calculate their windows.
-
-Hash is first introduced here for temporary file saving
+test a new schema for detectio windows
 
 """
 import os
@@ -33,7 +31,6 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 import SEAS_Main.simulation.transmission_spectra_simulator as theory
 import SEAS_Main.simulation.observed_spectra_simulator as observe
 import SEAS_Main.simulation.spectra_analyzer as analyze
-from SEAS_Main.observation_effects.noise import Photon_Noise
 
 import SEAS_Utils as utils
 import SEAS_Utils.common_utils.data_plotter as plotter
@@ -41,7 +38,7 @@ import SEAS_Utils.common_utils.configurable as config
 from SEAS_Utils.common_utils.DIRs import Mixing_Ratio_Data, TP_Profile_Data
 from SEAS_Utils.common_utils.data_loader import NIST_Smile_List
 from SEAS_Utils.common_utils.timer import simple_timer
-from SEAS_Utils.common_utils.constants import *
+
 
 def simulate_NIST(s,o,a):
 
@@ -106,56 +103,34 @@ def simulate_NIST(s,o,a):
         s.normalized_overlay = s.interpolate_overlay_effects(o_nu,o_xsec)
          
     # calculate theoretical transmission spectra
-    s.Reference_Transit_Signal = s.load_atmosphere_geometry_model(result="Height")
-    s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable,result="Height")
+    s.Reference_Transit_Signal = s.load_atmosphere_geometry_model()
+    s.Bio_Transit_Signal = s.load_atmosphere_geometry_model(bio=bio_enable)
     
-    
-    #nu,ref_trans = s.nu, s.Reference_Transit_Signal
-    #nu,bio_trans = s.nu, s.Bio_Transit_Signal
     # calculate observed transmission spectra
     nu,ref_trans = o.calculate_convolve(s.nu, s.Reference_Transit_Signal)
     nu,bio_trans = o.calculate_convolve(s.nu, s.Bio_Transit_Signal)
     
     # analyze the spectra
-    #s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
-
-    s.user_input["Star"]["R_Star"] = 0.6*R_Sun
-    s.user_input["Star"]["T"] = 4000.
-    s.user_input["Planet"]["R_Planet"] = 1*R_Earth
-    s.user_input["Planet"]["R_Atmosphere"] = 200*1000
-    s.user_input["Telescope"]["Aperture"] = 6.5
-    s.user_input["Telescope"]["Distance"] = 10*Psec
-    s.user_input["Telescope"]["Duration"] = 200*3600
-    s.user_input["Telescope"]["Quantum_Efficiency"] = 1
-    s.user_input["Telescope"]["min_wavelength"] = 1
-    s.user_input["Telescope"]["max_wavelength"] = 25
-    s.user_input["Observation_Effects"]["Noise"]["Multiplier"] = 1.2
-    s.user_input["Observation_Effects"]["bin_exponent"] = 3/2.
-    s.user_input["Observation_Effects"]["bin_width"] = 0.05
+    # s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
+    s.nu_window,thres = a.new_spectra_window(nu,ref_trans,0.3,100,"nu",thres=True)
     
-    
-    noise = Photon_Noise(s.user_input)
-
-
-
-
-
-
-
-
 
     
     
-    s.user_input["Plotting"]["Figure"]["Title"] = "Effective Height for Simulated Earth Atmosphere with traces of %s at %s ppm"%(bio_molecule,bio_abundance*10**6)
+    s.user_input["Plotting"]["Figure"]["Title"] = "Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of %s at %s ppm"%(bio_molecule,bio_abundance*10**6)
     s.user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
-    s.user_input["Plotting"]["Figure"]["y_label"] = r"Effective Height (m)"    
-    s.user_input["Plotting"]["Figure"]["y_multiplier"] = 1
+    s.user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
+    #s.user_input["Plotting"]["Figure"]["x_scale"] = "linear"
+    
     sim_plot = plotter.Simulation_Plotter(s.user_input)
     
     plt_ref_1 = sim_plot.plot_xy(nu,bio_trans,"with_bio")
     plt_ref_2 = sim_plot.plot_xy(nu,ref_trans,"ref.")
-    
-    #sim_plot.plot_window(s.nu_window,"k", 0.2)
+    sim_plot.plot_hline(thres[0][0],[thres[0][1],thres[0][2]],"Threshold")
+    sim_plot.plot_hline(thres[1][0],[thres[1][1],thres[1][2]],"Threshold")
+    sim_plot.plot_hline(thres[2][0],[thres[2][1],thres[2][2]],"Threshold")
+
+    sim_plot.plot_window(s.nu_window,"k", 0.2)
     sim_plot.set_legend([plt_ref_1, plt_ref_2])
     
     if utils.to_bool(s.user_input["Save"]["Plot"]["save"]):
@@ -190,7 +165,8 @@ if __name__ == "__main__":
     molecule_smiles = info[0]
     Bio_Molecule = random.choice(molecule_smiles)
     
-    Bio_Molecule = "CSC"
+    Bio_Molecule = "COC(CBr)=O"
+    #Bio_Molecule = molecule_smiles[0]
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = Bio_Molecule

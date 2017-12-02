@@ -344,10 +344,14 @@ class Physical_Cloud_Simulator_new(Physical_Cloud_Simulator):
 
 class Physical_Cloud_Simulator_2():
     
-    def __init__(self):
-        pass
+    def __init__(self, sample, mean, stdev):
+        
+        # log normal with mean of 0 means radius mean is 1
+        # log normal with mean of 1 means radius mean of 2.7 (or e)        
+        self.sample = sample
+        self.mean = mean
+        self.stdev = stdev
 
-    
     def mie_abcd(self,m,x):
         nmax=round(2+x+(4*x**(1./3.)))
         i = 1.0j
@@ -435,6 +439,34 @@ class Physical_Cloud_Simulator_2():
         
         
         return qext, qsca, qabs,asy
+
+    def calculate_cloud_xsec(self, info):
+        
+        lam,real,imag = info
+    
+
+            
+        radius = []
+        for i in range(self.sample):
+            particle_radius = float("%.2f"%np.random.lognormal(self.mean, self.stdev))*10**-6
+            radius.append(particle_radius)
+    
+        sigmas = np.zeros(len(lam))
+        
+        for rad in radius:
+            sigma = []
+            for i, l in enumerate(lam):
+                ref = (real[i])+(imag[i]*1.0j)
+                x = np.true_divide((2.0*np.pi*rad),float(l))  
+                qext,qsca,qabs,g = self.Mie(ref,x)
+                sigma_um=(np.pi*(rad**2)*(qext))
+                sigma_cm = np.true_divide(sigma_um,10**(8)) 
+                sigma.append(sigma_cm)
+            sigmas += sigma
+    
+        return lam, sigmas/self.sample
+
+
     
 
 class File_Cloud_Simulator():

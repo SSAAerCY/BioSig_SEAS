@@ -94,7 +94,7 @@ def try_pandexo_tutorial(spectra):
     inst_dict["configuration"]["detector"]["subarray"] = 'sub512'
     inst_dict["configuration"]["detector"]["readmode"] = 'nrs'
     
-    out = jdi.run_pandexo(exo_dict, ['NIRSpec G395M'], output_file="ref_trans_sim2.p")
+    out = jdi.run_pandexo(exo_dict, ['MIRI LRS'], output_file="ref_trans_sim_c.p")
     
     
     m1,n1,x1,y1,e1 = jpi.jwst_1d_spec(out, R=100, num_tran=100, model=True, x_range=[1,5])
@@ -158,7 +158,7 @@ def test_instrument(inst):
 
 if __name__ == "__main__":
     
-    spectra = 'ref_trans.txt'
+    spectra = 'bio_trans1.txt'
     try_pandexo_tutorial(spectra)
     
     #test_instrument("NIRSpec G395M")

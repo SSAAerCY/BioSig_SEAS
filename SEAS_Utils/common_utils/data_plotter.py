@@ -137,7 +137,20 @@ class Simulation_Plotter():
     def plot_dot(self,x,y):
         
         plt.plot(x,y*self.y_multi,"*")
+    
+    
+    def plot_hline(self,Y,Xlim,Label="HLine",Color = ""):
         
+        if Color == "":
+            
+            plt.plot((10000./Xlim[1], 10000./Xlim[0]), (Y*self.y_multi, Y*self.y_multi), 'k-')
+            
+            #plt.axhline(y=Y*self.y_multi,xmin=,xmax=, linewidth=2, label=Label)
+        else:
+            plt.plot((10000./Xlim[1], 10000./Xlim[0]), (Y*self.y_multi, Y*self.y_multi), 'k-')
+            #plt.axhline(y=Y*self.y_multi,xmin=10000./Xlim[1],xmax=10000./Xlim[0], linewidth=2, label=Label, color = Color)     
+        
+    
     def plot_xy(self, x, y, Label="Data", Color = "", Dtype="wn"):
         """
         assuming input is in wn... otherwise is um
@@ -169,6 +182,8 @@ class Simulation_Plotter():
     def plot_xy_list(self, xlist, ylist, ):
         pass
     
+    
+    
     def plot_window(self, window, Color="k", Alpha=0.2):
         
         for k in window:
@@ -192,7 +207,10 @@ class Simulation_Plotter():
     def plot_SNR(self, bin_center, SNR):
         
         plt.plot(bin_center, SNR, ".")
-        
+    
+    
+    
+    
         
     def plot_line(self):
         pass

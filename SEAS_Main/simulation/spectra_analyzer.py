@@ -54,6 +54,122 @@ class Spectra_Analyzer():
     def __init__(self, user_input):
         
         self.user_input = user_input
+    
+    def new_spectra_window(self,nu,coef,ratio=0.3,span=100,result="nu",thres=False):
+        """
+        window should be evaluated at different regions
+        
+        < 1 um cut out cus jwst won't need it
+        1-5um [10000-2000]
+        5-15um [2000-666]
+        15-25um [666-400]
+        """
+        windows = []
+        vis,near,mid,far = [],[],[],[]
+        VIS,NEAR,MID,FAR = [],[],[],[]
+        
+        for i,n in enumerate(nu):
+            if n > 10000:
+                vis.append(n)
+                VIS.append(coef[i])
+            elif n > 2000 and n <= 10000:
+                near.append(n)
+                NEAR.append(coef[i])
+            elif n > 666 and n <= 2000:
+                mid.append(n)
+                MID.append(coef[i])
+            elif n > 400 and n <= 666:
+                far.append(n)
+                FAR.append(coef[i])
+        
+        if thres == False:
+            near_window = self.find_window(near,NEAR,ratio,span,result,thres)
+            mid_window  = self.find_window(mid,MID,ratio,span,result,thres)
+            far_window  = self.find_window(far,FAR,ratio,span,result,thres)
+            
+            for win in near_window:
+                windows.append(win)
+            for win in mid_window:
+                windows.append(win)
+            for win in far_window:
+                windows.append(win)
+            return windows
+        
+        else:
+            
+            near_window = self.find_window(near,NEAR,ratio,span,result,thres)
+            mid_window  = self.find_window(mid,MID,ratio,span,result,thres)
+            far_window  = self.find_window(far,FAR,ratio,span,result,thres)
+            
+            for win in near_window[0]:
+                windows.append(win)
+            for win in mid_window[0]:
+                windows.append(win)
+            for win in far_window[0]:
+                windows.append(win)
+            
+            thres_info = [[near_window[1],2000,10000],
+                          [mid_window[1],666,2000],
+                          [far_window[1],400,666]]
+            
+            return windows, thres_info    
+        
+        
+
+    def find_window(self,nu,coef,ratio=0.3,span=100,result="nu",thres=False):
+        
+        window = []
+        win = [0,0]
+        
+        max_signal = max(coef)
+        min_signal = min(coef)
+        
+        signal_range = max_signal-min_signal
+        
+        threshold = min_signal + ratio * signal_range
+        
+        start = True
+        
+        for i,n in enumerate(nu):
+        
+                       
+            if coef[i] < threshold and start == True:
+                
+                win[0] = n
+                start = False
+            
+            if coef[i] > threshold and start == False:
+                
+                if n>=win[0]+span:
+                    win[1] = n
+                    start = True
+                    window.append(np.array(win))
+                else:
+                    win[0] = n
+                    start = True        
+            """
+            if i+1 == len(nu):
+                if n>=win[0]+span:
+                    win[1] = n
+                    window.append(np.array(win))
+            """      
+
+        if result == "wav":
+            wav_window = []
+            for win in window[::-1]:
+                low,high = "%.4g"%(10000./win[1]),"%.4g"%(10000./win[0])
+                wav_window.append([float(low),float(high)])             
+            window = wav_window
+
+        if self.user_input["Save"]["Window"]["save"] == "true":
+            with open(os.path.join(self.user_input["Save"]["Window"]["path"],
+                                   self.user_input["Save"]["Window"]["name"]),"w") as f:
+                for i in window:
+                    f.write("%s-%s\n"%(i[0],i[1]))
+
+        if thres:
+            return window,threshold
+        return window
      
     def spectra_window(self, nu, coef, type="A",threshold=200.,span=100.,min_signal=0,result="nu"):
         
@@ -132,6 +248,7 @@ class Spectra_Analyzer():
         
         if result == "nu":
             return window
+        
         elif result == "wav":
             return wav_window
             

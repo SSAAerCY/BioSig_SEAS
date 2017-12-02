@@ -123,3 +123,6 @@ def q_list(radius,lambdas,index_real,index_imag):
             count = count+1
     #print 'Size of result = ',len(result)        
     return result[:,8]
+
+
+

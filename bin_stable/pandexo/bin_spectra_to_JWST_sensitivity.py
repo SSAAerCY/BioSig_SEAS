@@ -190,7 +190,7 @@ def display_pandexo_output():
 def display_compare():
 
     file1 = "ref_trans_sim.p"
-    file2 = "bio_trans_sim.p"
+    file2 = "bio_trans_sim_c.p"
     
     Bins = 100
     Tran = 100

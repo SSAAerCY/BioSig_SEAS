@@ -95,12 +95,20 @@ class Photon_Noise():
         intensity = a/((wav**5)*(np.exp(b)-1.0))
         return intensity
 
-    def calculate_noise(self,lam=10**-6,bin=10*10**-9):
+    def calculate_noise(self, R_atmosphere):
     
         R_Star       = self.user_input["Star"]["R_Star"]
         R_planet     = self.user_input["Planet"]["R_Planet"] 
+        
+        if R_Star < 1000:
+            R_Star *= R_Sun
+        
+        if R_planet < 1000:
+            R_planet *= R_Earth
+        
+        
         R_obs        = self.user_input["Telescope"]["Aperture"]
-        R_atmosphere = self.user_input["Planet"]["R_Atmosphere"]
+        #R_atmosphere = self.user_input["Planet"]["R_Atmosphere"]
         Distance     = self.user_input["Telescope"]["Distance"]
         Duration     = self.user_input["Telescope"]["Duration"]
         Quantum      = self.user_input["Telescope"]["Quantum_Efficiency"]
@@ -108,20 +116,19 @@ class Photon_Noise():
         Noise_M      = self.user_input["Observation_Effects"]["Noise"]["Multiplier"]
         
         # calculate number of photons 
-        B_Body = self.blackbody_lam(lam, T_Star)
-        Bin_width = bin 
+        B_Body = self.blackbody_lam(self.bin_centers*10**-6, T_Star)
+        Bin_width = self.bin_width*10**-6
         A_Star = np.pi*R_Star**2
         Psi_Tele = np.pi*R_obs**2/Distance**2
         E_Total = B_Body*Bin_width*A_Star*Psi_Tele*Duration
-        num_photon = (E_Total*lam)/(HPlanck*c)*Quantum
+        num_photon = (E_Total*self.bin_centers*10**-6)/(HPlanck*c)*Quantum
         
-        
-        fp = (2*R_planet*R_atmosphere)/R_Star**2
-        # calculate photon noise
+        signal = (2*R_planet*R_atmosphere)/R_Star**2
         photon_noise = Noise_M/np.sqrt(num_photon)
-        #transmission_noise = R_Star**2/(2*R_planet*R_atmosphere)*photon_noise#*10**6
-        
-        return photon_noise
+        SNR = signal/photon_noise
+
+                
+        return signal, photon_noise, SNR
     
     
     def determine_bin(self):
@@ -131,7 +138,7 @@ class Photon_Noise():
         bin_width_init = self.user_input["Observation_Effects"]["bin_width"]
         bin_exponent   = self.user_input["Observation_Effects"]["bin_exponent"]
         
-        bin_edges,bin_width,bin_centers,error_bar = [],[],[],[]
+        bin_edges,bin_width,bin_centers = [],[],[]
         
         i=0
         lambda_current = lambda_init
@@ -144,19 +151,20 @@ class Photon_Noise():
             lambda_current += new_bin_width
             
             if lambda_center > lambda_max:
-                print i
                 break
             bin_edges.append(lambda_current)
             bin_centers.append(lambda_center)
             bin_width.append(new_bin_width)
-            noise = self.calculate_noise(lambda_center*10**-6,new_bin_width*10**-6)
-            error_bar.append(noise)
             
-            print lambda_center, new_bin_width, noise*10**6
             
             i+=1
-            
-        return bin_edges, bin_width, bin_centers, error_bar
+        
+        self.bin_edges = np.array(bin_edges)
+        self.bin_width = np.array(bin_width)
+        self.bin_centers = np.array(bin_centers)
+        
+        
+        return bin_edges, bin_width, bin_centers
 
 
 

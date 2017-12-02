@@ -45,7 +45,9 @@ Stellar_Spectra     = os.path.join(Molecule_Absorption,"Stellar_Spectra")
 HITRAN_Lines        = os.path.join(Molecule_Absorption,"HITRAN_Line_List")
 HITRAN_Water_Lines  = os.path.join(HITRAN_Lines, "H2O")
 HITRAN_Molecule_List= os.path.join(HITRAN_Lines, "HITRAN_Molecule_List.txt")
-HITRAN_Mineral      = os.path.join(Data_DIR,"aerosol_data","HITRAN_mineral")
+
+Aerosol_Data        = os.path.join(Data_DIR,"aerosol_data")
+HITRAN_Mineral      = os.path.join(Aerosol_Data,"HITRAN_mineral")
 
 Atmosphere_Data     = os.path.join(Data_DIR,"atmosphere_data")
 TP_Profile_Data     = os.path.join(Atmosphere_Data, "TP_Profile")

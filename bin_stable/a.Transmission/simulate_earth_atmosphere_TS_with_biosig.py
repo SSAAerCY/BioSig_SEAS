@@ -119,6 +119,7 @@ def simulate_NIST(s,o,a):
     s.user_input["Plotting"]["Figure"]["Title"] = "Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of %s at %s ppm"%(bio_molecule,bio_abundance*10**6)
     s.user_input["Plotting"]["Figure"]["x_label"] = r'Wavelength ($\mu m$)'
     s.user_input["Plotting"]["Figure"]["y_label"] = r"Transit Signal (ppm)"    
+    s.user_input["Plotting"]["Figure"]["x_scale"] = "linear"
     
     sim_plot = plotter.Simulation_Plotter(s.user_input)
     
@@ -160,7 +161,8 @@ if __name__ == "__main__":
     molecule_smiles = info[0]
     Bio_Molecule = random.choice(molecule_smiles)
     
-    Bio_Molecule = "CSC"
+    Bio_Molecule = "COC(CBr)=O"
+    #Bio_Molecule = molecule_smiles[0]
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["molecule"] = Bio_Molecule
