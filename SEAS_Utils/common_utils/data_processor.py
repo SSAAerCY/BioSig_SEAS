@@ -160,66 +160,10 @@ def merge_list(list_d, param=5):
     return new_list
 
 
-def list_merger(list_d, list_y,param=5):
 
 
-    new_list = []
-    compare_list = []
-    tag = []
-    prev = -100
-    begin = True
-    
-    if list_d == []:
-        return []
-    elif len(list_d) == 1:
-        return list_d
-    else:
-        pass
 
-    for i in list_d:
-        
-        if begin:
-            begin = False
-            prev = i
-            continue
-    
-        compare_list.append(abs(i-prev) <= param)
-        prev = i
-    
-    for j,id in enumerate(compare_list):
-        if id == True:
-            if tag == []:
-                tag.append(list_d[j])
-                tag.append(list_d[j+1])
-            else:
-                tag.append(list_d[j+1])
-        else:
-            try:
-                y = np.array(map(list_y.__getitem__, tag))
-                max_value, max_index = max([(v,i) for i,v in enumerate(y)])
-                new_list.append(tag[max_index])
-            except:
-                new_list.append(list_d[j])
-            tag = []
-
-    if tag != []:
-        y = np.array(map(list_y.__getitem__, tag))
-        max_value, max_index = max([(v,i) for i,v in enumerate(y)])
-        new_list.append(max_index)
-        #new_list.append(tag[0]+(tag[-1]-tag[0])/2)
-        
-        
-    
-    if compare_list[-1] == False:
-        new_list.append(list_d[-1])
-
-    
-    return new_list
-
-
-def merge_list_special(indexs, value, param=5):
-    
-    
+def list_merger(indexs, value, param=5, method = "max"):
     
     new_list = []
     compare_list = []
@@ -254,15 +198,21 @@ def merge_list_special(indexs, value, param=5):
             else:
                 tag.append(indexs[j+1])
         else:
-            y = map(value.__getitem__, tag)
-            max_index = list(value).index(max(y))
-            new_list.append(max_index)
+            if method == "max":
+                y = map(value.__getitem__, tag)
+                max_index = list(value).index(max(y))
+                new_list.append(max_index)
+            elif method == "mid":
+                new_list.append(tag[0]+(tag[-1]-tag[0])/2)
             tag = []    
     
     if tag != []:
-        y = map(value.__getitem__, tag)
-        max_index = list(value).index(max(y))
-        new_list.append(max_index)
+        if method == "max":
+            y = map(value.__getitem__, tag)
+            max_index = list(value).index(max(y))
+            new_list.append(max_index)
+        elif method == "mid":
+            new_list.append(tag[0]+(tag[-1]-tag[0])/2)
         
         
     if compare_list[-1] == False:
