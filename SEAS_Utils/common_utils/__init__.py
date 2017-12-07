@@ -46,7 +46,10 @@ def to_bool(x):
 def to_float(x):
     if x == None or x == "None":
         return None
-    return float(x)
+    try:
+        return float(x)
+    except ValueError:
+        return None
 
 def to_int(x):
     if x == None or x == "None":

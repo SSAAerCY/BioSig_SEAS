@@ -404,8 +404,7 @@ def NIST_to_HITRAN(molecule,result="Formula"):
     
 
 def Particulate_Info_Loader(particulate):
-    
-    
+  
 
     WB = Excel_Saver(molecule_info,"Particulate_List.xlsx")
     info = WB.load_sheet("Particulates",False)
@@ -416,12 +415,12 @@ def Particulate_Info_Loader(particulate):
     while True:
         
         partical = info["A%s"%(num)].value
-        source   = info["B%s"%(num)].value
-        filename = info["C%s"%(num)].value
+        common   = info["B%s"%(num)].value
+        source   = info["C%s"%(num)].value
+        filename = info["D%s"%(num)].value
         
         if partical == None:
             break
-        
         if partical == particulate.lower():
             return partical, source, filename
 
@@ -451,8 +450,14 @@ def load_particulates(filename,output="wave"):
         new_rn = []
         new_ri = []
         
+        
+        
         if output=="wave":
             for i,dat in enumerate(wave):
+                if dat <= 1:
+                    continue
+                
+                
                 if dat >= 25:
                     break
                 new_x.append(wave[i])
@@ -461,13 +466,17 @@ def load_particulates(filename,output="wave"):
                 
         if output=="wcm":
             for i,dat in enumerate(wcm):
-                print dat
+                if dat >= 10000:
+                    continue
+                
                 if dat <= 500:
                     break
                 new_x.append(wcm[i])
                 new_rn.append(rn[i])
                 new_ri.append(ri[i])
-                    
+        
+        
+        print len(new_x)
         return new_x,new_rn,new_ri
 
 

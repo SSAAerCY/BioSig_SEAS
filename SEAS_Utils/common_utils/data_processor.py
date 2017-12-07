@@ -203,7 +203,12 @@ def list_merger(list_d, list_y,param=5):
             tag = []
 
     if tag != []:
-        new_list.append(tag[0]+(tag[-1]-tag[0])/2)
+        y = np.array(map(list_y.__getitem__, tag))
+        max_value, max_index = max([(v,i) for i,v in enumerate(y)])
+        new_list.append(max_index)
+        #new_list.append(tag[0]+(tag[-1]-tag[0])/2)
+        
+        
     
     if compare_list[-1] == False:
         new_list.append(list_d[-1])
@@ -212,7 +217,9 @@ def list_merger(list_d, list_y,param=5):
     return new_list
 
 
-def merge_list_special(list_d, ref,bio,error,param=5):
+def merge_list_special(indexs, value, param=5):
+    
+    
     
     new_list = []
     compare_list = []
@@ -220,14 +227,15 @@ def merge_list_special(list_d, ref,bio,error,param=5):
     prev = -100
     begin = True
     
-    if list_d == []:
+    if indexs == []:
         return []
-    elif len(list_d) == 1:
-        return list_d
+    elif len(indexs) == 1:
+        return indexs
     else:
         pass
-    
-    for i in list_d:
+
+     
+    for i in indexs:
         
         if begin:
             begin = False
@@ -235,40 +243,31 @@ def merge_list_special(list_d, ref,bio,error,param=5):
             continue
     
         compare_list.append(abs(i-prev) <= param)
-        prev = i
+        prev = i 
     
- 
     
     for j,id in enumerate(compare_list):
-    
         if id == True:
             if tag == []:
-                tag.append(list_d[j])
-                tag.append(list_d[j+1])
+                tag.append(indexs[j])
+                tag.append(indexs[j+1])
             else:
-                tag.append(list_d[j+1])
-        
+                tag.append(indexs[j+1])
         else:
-            try:
-                value = tag[0]+(tag[-1]-tag[0])/2
-                
-                y1 = np.array(map(ref.__getitem__, tag))
-                y2 = np.array(map(bio.__getitem__, tag))
-                error = np.array(map(error.__getitem__, tag))
-                
-                max_value, max_index = max([(v,i) for i,v in enumerate((y2-y1)/error)])
-                
-                new_list.append(tag[max_index])
-            except:
-                new_list.append(list_d[j])
-            tag = []
+            y = map(value.__getitem__, tag)
+            max_index = list(value).index(max(y))
+            new_list.append(max_index)
+            tag = []    
     
     if tag != []:
-        new_list.append(tag[0]+(tag[-1]-tag[0])/2)
-    
-    if compare_list[-1] == False:
-        new_list.append(list_d[-1])
-
+        y = map(value.__getitem__, tag)
+        max_index = list(value).index(max(y))
+        new_list.append(max_index)
         
+        
+    if compare_list[-1] == False:
+        new_list.append(indexs[-1])
+
     
-    return new_list
+    return new_list  
+    

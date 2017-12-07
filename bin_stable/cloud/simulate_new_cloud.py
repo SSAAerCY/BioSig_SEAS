@@ -109,39 +109,51 @@ def Mie(m,x):
 
 def load_particulate(filename,output="wave"):
     
-    info = netcdf.netcdf_file(filename, 'r')
-    
-    text = info.variables["text"].data
-    ri   = info.variables["ri"].data
-    rn   = info.variables["rn"].data
-    wave = info.variables["wavelength"].data
-    wcm  = info.variables["wcm"].data
-    lenx = info.variables["nlines"].data
-    
-    info.close()
+    if ".nc" in filename:
+        
+        from scipy.io import netcdf
 
-    new_x = []
-    new_rn = []
-    new_ri = []
+        info = netcdf.netcdf_file(filename, 'r')
+        
+        text = info.variables["text"].data
+        ri   = info.variables["ri"].data
+        rn   = info.variables["rn"].data
+        wave = info.variables["wavelength"].data
+        wcm  = info.variables["wcm"].data
+        lenx = info.variables["nlines"].data
+        
+        info.close()
     
-    if output=="wave":
-        for i,dat in enumerate(wave):
-            if dat >= 25:
-                break
-            new_x.append(wave[i])
-            new_rn.append(rn[i])
-            new_ri.append(ri[i])
-            
-    if output=="wcm":
-        for i,dat in enumerate(wcm):
-            print dat
-            if dat <= 500:
-                break
-            new_x.append(wcm[i])
-            new_rn.append(rn[i])
-            new_ri.append(ri[i])
+        new_x = []
+        new_rn = []
+        new_ri = []
+        
+        if output=="wave":
+            for i,dat in enumerate(wave):
+                if dat <= 1:
+                    continue
                 
-    return new_x,new_rn,new_ri
+                
+                if dat >= 25:
+                    break
+                new_x.append(wave[i])
+                new_rn.append(rn[i])
+                new_ri.append(ri[i])
+                
+        if output=="wcm":
+            for i,dat in enumerate(wcm):
+                if dat >= 10000:
+                    continue
+                
+                if dat <= 500:
+                    break
+                new_x.append(wcm[i])
+                new_rn.append(rn[i])
+                new_ri.append(ri[i])
+        
+        
+        print len(new_x)
+        return new_x,new_rn,new_ri
 
 def plot_particulate(particulate,data):
     
@@ -193,38 +205,65 @@ def calculate_cloud_xsec(info, sample=100):
     return lam, sigmas/sample
 
 
-def plot_cross_section(particulate,lam,sigmas):
+def plot_cross_section(particulates,ns,lams,sigmas):
+    """
+    need to be able to interpolate
+    add molecular cross sections.
+    """
+    l = 1000
+
+    total_x = np.array()
+    
+    
+    for i,particulate in enumerate(particulates):
+        tau = ns[i]*sigmas[i]*l
+        trans = np.e**(-tau)
+        plt.plot(lams[i],trans)
         
-    plt.plot(lam,sigmas/10)
-    particulate = "mgsio3"
+    
     
     plt.xlabel("wavelength (um)")
     plt.ylabel("cross section cm^2/molecule")
-    plt.title("Particulate Mie Scattering Cross Section for %s"%particulate)
+    plt.title("Particulate Mie Scattering Cross Section for %s"%(",".join(particulates)))
     
     plt.show()
     
     
     
+def calculate_particle(particulates):
+
+    lams,sigmas = [],[]
     
+    for particulate in particulates:
+        try:
+            partical, source, filename = Particulate_Info_Loader(particulate)
+            filepath = os.path.join(Aerosol_Data,source,filename)
+            info = load_particulate(filepath,"wave")
+            lam,sigma = calculate_cloud_xsec(info,100)  
+            lams.append(lam)
+            sigmas.append(sigma)
+        except:
+            print particulate
     
+    return lams,sigmas
     
    
 if __name__ == "__main__":
+
+    P = 1000
+    T = 2000
+    K = 1.38*10**-23
     
-    particulate = "mgsio3"
+    n = P/(K*T) 
     
+    particulate = ["mgsio3","fe2sio4","tholins","feo","mg2sio4","zns","sio2"]#,"soot",
+                   #"Mix_1","Mix_2","Mix_3","Mix_4"]
+    number_density = np.array([0.1,0.1,0.1,0.1,0.1,0.1,0.1])*n
     
-    partical, source, filename = Particulate_Info_Loader(particulate)
+    lams,sigmas = calculate_particle(particulate)
+
     
-    
-    filepath = os.path.join(Aerosol_Data,source,filename)
-    
-    info = load_particulate(filepath,"wave")
-    
-    lam,sigmas = calculate_cloud_xsec(info,100)
-    
-    plot_cross_section(particulate,lam,sigmas)
+    plot_cross_section(particulate,number_density,lams,sigmas)
     
     
     #plot_particulate(particulate,info)
