@@ -198,6 +198,10 @@ def list_merger(indexs, value, param=5, method = "max"):
             else:
                 tag.append(indexs[j+1])
         else:
+            if tag == []:
+                tag.append(indexs[j])
+            
+            
             if method == "max":
                 y = map(value.__getitem__, tag)
                 max_index = list(value).index(max(y))
