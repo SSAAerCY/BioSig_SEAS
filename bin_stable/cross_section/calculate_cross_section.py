@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import SEAS_Aux.cross_section.cross_section_calculator as csc
 #import SEAS_Utils.common_utils.data_plotter as plt
-from SEAS_Utils.common_utils.DIRs import Temp_DIR, HITRAN_Water_Lines
+from SEAS_Utils.common_utils.DIRs import Temp_DIR, HITRAN_Water_Lines,HITRAN_Lines
 from SEAS_Utils.common_utils.timer import simple_timer
 
 import matplotlib.pyplot as plt
@@ -73,7 +73,7 @@ def simplist_test():
     
     nu, coef = calc.personal_calculator(data)
     
-    plt.simple_plot(nu,coef)
+    #plt.simple_plot(nu,coef)
 
 def simple_time_test():
     
@@ -98,7 +98,7 @@ def simple_time_test():
         nu, coef = calc.personal_calculator(data)
         print "hi", Timer.elapse()
     
-    plt.simple_plot(nu,coef)
+    #plt.simple_plot(nu,coef)
     print Timer.total()    
 
 def test_hapi_calc():
@@ -116,22 +116,26 @@ def test_hapi_calc():
     cross_section = csc.cross_section_calculator(path,molecule,numin,numax,step)
     nu, coef = cross_section.hapi_calculator()
     
-    plt.simple_plot(nu,coef)
-    
+    #plt.simple_plot(nu,coef)
+
+
+
 
 
 
 if __name__ == "__main__":
 
-    d_path      = HITRAN_Water_Lines
+    d_path      = os.path.join(HITRAN_Lines,"CH4")
     r_path      = Temp_DIR
-    molecule    = "H2O"
+    molecule    = "CH4"
     component   = [1,1,1]
-    numin       = 4000
-    numax       = 11000
-    step        = 10
+    numin       = 2500
+    numax       = 5000
+    step        = 2
     P           = 10.
     T           = 500.
+    
+    # 400-2000, 2000-10000, 10000-30000
     
     calc = csc.cross_section_calculator(d_path,r_path,molecule,component,numin,numax,step,P,T)
     
@@ -142,7 +146,9 @@ if __name__ == "__main__":
     nu, coef = calc.personal_calculator(data)
     wav = 10000./nu
     
-    
+    #plt.yscale("log")
+    plt.plot(nu,coef)
+    plt.show()
     
     k = 1.38*10**-23
     n = P/(k*T)

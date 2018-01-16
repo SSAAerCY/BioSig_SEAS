@@ -408,7 +408,6 @@ class TS_Simulator():
         currently constrained to one molecule
         """
         
-        
         normalized_bio_molecule_xsec = []
         
         if bio_molecule in self.normalized_molecules:
@@ -428,7 +427,9 @@ class TS_Simulator():
             
             # is we chose nist data, it is assuming we're searching with smiles since conflict using formula?
             #x1,y1 = load_NIST_spectra(bio_molecule,["wn","T"],self.is_smile)
+            
             x1,y1 = load_NIST_spectra(bio_molecule,["wn","T"],True)
+            
             
             self.bio_data_min = min(x1)
             self.bio_data_max = max(x1)

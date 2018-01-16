@@ -212,7 +212,7 @@ def plot_cross_section(particulates,ns,lams,sigmas):
     """
     l = 1000
 
-    total_x = np.array()
+    #total_x = np.array()
     
     
     for i,particulate in enumerate(particulates):

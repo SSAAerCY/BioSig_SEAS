@@ -75,10 +75,14 @@ class OS_Simulator():
     def add_background_stars(self):
         pass
 
-    def calculate_convolve(self, nu, trans):
+    def calculate_convolve(self, nu, trans, record=False):
         #if self.user_input["Observation"]["Convolve"] == "true":
         amount = utils.to_float(self.user_input["Observation_Effects"]["Convolve"]["convolve_amount"])
         nu,Transit_Signal,i1,i2,slit = hp.convolveSpectrum(nu,trans,SlitFunction=hp.SLIT_RECTANGULAR,Resolution=amount,AF_wing=20.0)
+        
+        
+        if record:
+            return nu,Transit_Signal,max(Transit_Signal)
         
         return nu,Transit_Signal
 

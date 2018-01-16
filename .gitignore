@@ -1,5 +1,6 @@
 result/*
 bin_personal/*
+bin_stable/NIST_Spectra_Standalone/*
 input/database/*
 input/pandexo/*
 input/**/*.png

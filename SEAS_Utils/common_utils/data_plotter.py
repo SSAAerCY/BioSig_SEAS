@@ -151,7 +151,7 @@ class Simulation_Plotter():
             #plt.axhline(y=Y*self.y_multi,xmin=10000./Xlim[1],xmax=10000./Xlim[0], linewidth=2, label=Label, color = Color)     
         
     
-    def plot_xy(self, x, y, Label="Data", Color = "", Dtype="wn"):
+    def plot_xy(self, x, y, Label="Data", Color = "", Dtype="wn", Marker="-"):
         """
         assuming input is in wn... otherwise is um
         """
@@ -173,9 +173,15 @@ class Simulation_Plotter():
         y = np.array(y)
     
         if Color == "":
-            plt_ref, = plt.plot(x*self.x_multi,y*self.y_multi,label=Label)            
+            if Marker == "-":
+                plt_ref, = plt.plot(x*self.x_multi,y*self.y_multi,label=Label)   
+            else:
+                plt_ref, = plt.plot(x*self.x_multi,y*self.y_multi,label=Label, marker=Marker)            
         else:
-            plt_ref, = plt.plot(x*self.x_multi,y*self.y_multi,label=Label,color=Color)
+            if Marker == "-":
+                plt_ref, = plt.plot(x*self.x_multi,y*self.y_multi,label=Label,color=Color)   
+            else:
+                plt_ref, = plt.plot(x*self.x_multi,y*self.y_multi,label=Label,color=Color, marker=Marker)
 
         return plt_ref
   
@@ -183,6 +189,39 @@ class Simulation_Plotter():
         pass
     
     
+    def plot_bond_location(self,bond,max_signal,Color="r",Alpha=0.2):
+        
+        
+        
+        for k in bond:
+            label = k[2]
+            
+            if self.x_unit == "um":
+                if k[0] > k[1]:
+                    up,down = 10000./k[0],10000./k[1]
+                else:
+                    up,down = 10000./k[1],10000./k[0]
+                    
+            elif self.x_unit == "nm":
+                if k[0] > k[1]:
+                    up,down = 10000000./k[0],10000000./k[1]    
+                else:
+                    up,down = 10000000./k[1],10000000./k[0]        
+            elif self.x_unit == "wn":
+                if k[0] > k[1]:
+                    up,down = k[1],k[0]  
+                else:
+                    up,down = k[0],k[1]
+            else:
+                up,down = k[0],k[1]        
+            
+            plt.axvspan(up,down,facecolor=Color,alpha=Alpha)
+            
+            if k[2] == "C=C":
+                max_signal -= 20*10**-6
+                
+            
+            plt.text((up+down)/2, max_signal*self.y_multi, label,horizontalalignment='center')
     
     def plot_window(self, window, Color="k", Alpha=0.2):
         

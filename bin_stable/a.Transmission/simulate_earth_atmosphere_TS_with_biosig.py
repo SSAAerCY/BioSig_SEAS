@@ -113,7 +113,8 @@ def simulate_NIST(s,o,a):
     nu,bio_trans = o.calculate_convolve(s.nu, s.Bio_Transit_Signal)
     
     # analyze the spectra
-    s.nu_window = a.spectra_window(nu,ref_trans,"T",0.3, 100.,s.min_signal)
+    s.nu_window = a.spectra_window(nu,ref_trans,"T",0.5, 100.,s.min_signal)
+    #s.nu_window = a.new_spectra_window(nu,ref_trans,0.8,100)
     
     
     s.user_input["Plotting"]["Figure"]["Title"] = "Transit Signal and Atmospheric Window for Simulated Earth Atmosphere with traces of %s at %s ppm"%(bio_molecule,bio_abundance*10**6)
@@ -161,7 +162,9 @@ if __name__ == "__main__":
     molecule_smiles = info[0]
     Bio_Molecule = random.choice(molecule_smiles)
     
-    Bio_Molecule = "COC(CBr)=O"
+    Bio_Molecule = "O=CC"
+    Bio_Molecule = "OCCCl"
+    Bio_Molecule = "CBr"
     #Bio_Molecule = molecule_smiles[0]
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["enable"] = True
     user_input["Atmosphere_Effects"]["Bio_Molecule"]["data_type"] = "NIST"

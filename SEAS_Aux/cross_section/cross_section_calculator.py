@@ -31,7 +31,7 @@ class cross_section_calculator():
 
 
     def __init__(self,d_path,r_path,molecule,component,numin,numax,step=0.1,P=1,T=300,
-                 gamma="gamma_self",cross=True):
+                 gamma="gamma_self",cross=True, direct=False, multi=False):
         """
         
         n: molecule name
@@ -62,7 +62,9 @@ class cross_section_calculator():
         self.gamma = gamma
         self.cross = cross
         
-                
+        self.direct = direct
+        self.multi = multi
+        
         #self.fetch_data()
     
     
@@ -99,7 +101,7 @@ class cross_section_calculator():
         data input for personal_calculator
         """
     
-        molecule_data = l2x.read_data(self.d_path,self.molecule,self.numin,self.numax)
+        molecule_data = l2x.read_data(self.d_path,self.molecule,self.numin,self.numax,direct=self.direct,multi=self.multi)
         
         return  molecule_data
     

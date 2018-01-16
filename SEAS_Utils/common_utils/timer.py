@@ -57,6 +57,9 @@ class simple_timer():
         percent = float(count)/float(total)
         
         time_passed = self.current_time - self.initial_time
+        time_passed_precision = ("%"+".%sf"%(int(self.precision)/2))%time_passed
+        
+        
         try:
             estimated_time_remaining = ((1.-percent)/percent)*time_passed
         except ZeroDivisionError:
@@ -68,11 +71,12 @@ class simple_timer():
         try:
             remaining_precision = ("%"+".%sf"%(int(self.precision)/2))%(estimated_time_remaining)
             hour_precision = ("%"+".%sf"%(int(self.precision)/2))%(estimated_time_remaining/3600.)
+            
         except:
             remaining_precision = estimated_time_remaining
             hour_precision = estimated_time_remaining
             
-        result = " %s Percent Completed, Estimated %ss (%shr) Remaining"%(percent_precision, remaining_precision,hour_precision)
+        result = " %ss Passed, %s Completed, Estimated %ss (%shr) Remaining"%(time_passed_precision, percent_precision, remaining_precision,hour_precision)
         
         return result
 

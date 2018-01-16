@@ -122,6 +122,8 @@ def simulate_NIST(s,o,a):
     
     sim_plot = plotter.Simulation_Plotter(s.user_input)
     
+    
+    sim_plot.plot_xy(s.nu,s.Reference_Transit_Signal)
     plt_ref_1 = sim_plot.plot_xy(nu,bio_trans,"with_bio")
     plt_ref_2 = sim_plot.plot_xy(nu,ref_trans,"ref.")
     
@@ -143,12 +145,16 @@ if __name__ == "__main__":
     
     user_input = config.Configuration("../../bin_stable/a.Main/user_input_dev.cfg")
     
-    Filename = "Test_Water"
+    Filename = "Test_Methane"
     
     user_input["Simulation_Control"]["DB_DIR"]              = "Simulation_Band"
     user_input["Simulation_Control"]["DB_Name"]             = None#"cross_sec_Example.db"
-    user_input["Simulation_Control"]["TP_Profile_Name"]     = "TP_iso_H2O_26576258.txt"
-    user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "MR_iso_H2O_26576258.txt"
+    #user_input["Simulation_Control"]["TP_Profile_Name"]     = "TP_iso_H2O_26576258.txt"
+    #user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "MR_iso_H2O_26576258.txt"
+
+    user_input["Simulation_Control"]["TP_Profile_Name"]     = "isothermal_300K.txt"
+    user_input["Simulation_Control"]["Mixing_Ratio_Name"]   = "CH4_only.txt"
+
 
     user_input["Save"]["Intermediate_Data"]["cross_section_savename"] = "%s_Cross_Section.npy"%Filename
     

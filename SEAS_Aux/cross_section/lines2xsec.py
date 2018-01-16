@@ -82,7 +82,7 @@ def EnvironmentDependency_Gamma0(Gamma0_ref,T,Tref,p,pref,TempRatioPower):
     return Gamma0_ref*p/pref*(Tref/T)**TempRatioPower
 
 
-def read_data(path,molecule,numin,numax,imin=-1,ctop=-1):
+def read_data(path,molecule,numin,numax,imin=-1,ctop=-1,direct=False,multi=False):
     """
     numin: minimum wavenumber
     numax: maximum wavenumber
@@ -93,37 +93,88 @@ def read_data(path,molecule,numin,numax,imin=-1,ctop=-1):
     Can be constrained in wavenumber
     Returns a dictionary containing data from the line list file
     """
-    
-    print "Reading Data From %s/%s.data"%(path,molecule)
-    f = open("%s/%s.data"%(path,molecule)).read().split("\n")
-    
-    M, I, wavenumber, intensity,gamma_air,gamma_self, elower, n_air,delta_air = [],[],[],[],[],[],[],[],[]
-    
-    appending = False
-    for i in range(len(f)-1):
+
+    if multi:
         
-        wn = float(f[i][3:15])
+        M, I, wavenumber, intensity,gamma_air,gamma_self, elower, n_air,delta_air = [],[],[],[],[],[],[],[],[]
+            
+        for filename in path:
+            
+            front,back = filename.split("-")
+            
+            filemin = float(front.split("_")[-1])
+            filemax = float(back.split("_")[0])
+            
+            if filemin > numax or filemax < numin:
+                continue
+            
+            
+            print "Reading Data From %s"%(filename)
+            
+            
+            f = open(filename).read().split("\n")
+            
+            
+            for i in range(len(f)-1):
+                
+                wn = float(f[i][3:15])
+                
+                if wn < numin or wn >= numax:
+                    continue
+            
+                M.append(         int(f[i][0:2]))
+                I.append(         int(f[i][2]))
+                wavenumber.append(float(f[i][3:15]))
+                intensity.append( float(f[i][16:26]))
+                gamma_air.append( float(f[i][35:40]))
+                gamma_self.append(float(f[i][41:45]))
+                elower.append(    float(f[i][46:56]))
+                n_air.append(     float(f[i][56:59]))
+                delta_air.append( float(f[i][60:68]))
+                
+        data = {"M":M, "I":I, "wavenumber":wavenumber, "intensity":intensity, 
+                  "gamma_air":gamma_air, "gamma_self":gamma_self, "elower":elower,
+                  "n_air":n_air, "delta_air":delta_air}
         
-        if wn >= numin:
-            appending = True
-        if wn >= numax:
-            break
-        
-        M.append(         int(f[i][0:2]))
-        I.append(         int(f[i][2]))
-        wavenumber.append(float(f[i][3:15]))
-        intensity.append( float(f[i][16:26]))
-        gamma_air.append( float(f[i][35:40]))
-        gamma_self.append(float(f[i][41:45]))
-        elower.append(    float(f[i][46:56]))
-        n_air.append(     float(f[i][56:59]))
-        delta_air.append( float(f[i][60:68]))
-        
-    data = {"M":M, "I":I, "wavenumber":wavenumber, "intensity":intensity, 
-              "gamma_air":gamma_air, "gamma_self":gamma_self, "elower":elower,
-              "n_air":n_air, "delta_air":delta_air}
+        return data
     
-    return data
+    else:
+        
+        if direct:
+            print "Reading Data From %s"%(path)
+            f = open(path).read().split("\n")
+            
+        else:
+            print "Reading Data From %s/%s.data"%(path,molecule)
+            f = open("%s/%s.data"%(path,molecule)).read().split("\n")
+        
+        M, I, wavenumber, intensity,gamma_air,gamma_self, elower, n_air,delta_air = [],[],[],[],[],[],[],[],[]
+        
+        appending = False
+        for i in range(len(f)-1):
+            
+            wn = float(f[i][3:15])
+            
+            if wn >= numin:
+                appending = True
+            if wn >= numax:
+                break
+            
+            M.append(         int(f[i][0:2]))
+            I.append(         int(f[i][2]))
+            wavenumber.append(float(f[i][3:15]))
+            intensity.append( float(f[i][16:26]))
+            gamma_air.append( float(f[i][35:40]))
+            gamma_self.append(float(f[i][41:45]))
+            elower.append(    float(f[i][46:56]))
+            n_air.append(     float(f[i][56:59]))
+            delta_air.append( float(f[i][60:68]))
+            
+        data = {"M":M, "I":I, "wavenumber":wavenumber, "intensity":intensity, 
+                  "gamma_air":gamma_air, "gamma_self":gamma_self, "elower":elower,
+                  "n_air":n_air, "delta_air":delta_air}
+        
+        return data
 
 
 def absorption_Voigt_calculation(molecule_data, component, gamma_name, P, T, numin, numax, step=0.1, cross_section=True, OmegaWing=DefaultOmegaWing,
